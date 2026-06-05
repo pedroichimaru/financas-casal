@@ -981,8 +981,8 @@ async function addPagamento() {
   if (data.replace(/\D/g, "").length < 8)
              { errEl.textContent = "Informe a data completa no formato DD/MM/AAAA."; errEl.hidden = false; return; }
   if (!desc) { errEl.textContent = "Informe a descrição.";    errEl.hidden = false; return; }
-  if (isNaN(valor) || valor <= 0)
-             { errEl.textContent = "Informe um valor válido."; errEl.hidden = false; return; }
+  if (isNaN(valor) || valor === 0)
+             { errEl.textContent = "Informe um valor válido (pode ser negativo)."; errEl.hidden = false; return; }
 
   const btn = document.getElementById("btn-add-pag");
   btn.disabled = true;
@@ -1043,8 +1043,8 @@ async function saveEditPagamento() {
   if (data.replace(/\D/g, "").length < 8)
              { errEl.textContent = "Informe a data completa no formato DD/MM/AAAA."; errEl.hidden = false; return; }
   if (!desc) { errEl.textContent = "Informe a descrição.";     errEl.hidden = false; return; }
-  if (isNaN(valor) || valor <= 0)
-             { errEl.textContent = "Informe um valor válido."; errEl.hidden = false; return; }
+  if (isNaN(valor) || valor === 0)
+             { errEl.textContent = "Informe um valor válido (pode ser negativo)."; errEl.hidden = false; return; }
 
   const btn = document.getElementById("edit-pag-save");
   btn.disabled = true;

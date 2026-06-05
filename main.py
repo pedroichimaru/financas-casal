@@ -162,8 +162,8 @@ def list_pagamentos(mes: str):
 
 @app.post("/pagamentos")
 def create_pagamento(body: PagamentoIn):
-    if body.valor <= 0:
-        raise HTTPException(status_code=400, detail="Valor deve ser positivo")
+    if body.valor == 0:
+        raise HTTPException(status_code=400, detail="Valor não pode ser zero")
     if body.apropriacao not in VALID_PAG_APROPRIACOES:
         raise HTTPException(status_code=400, detail="Apropriação inválida")
     return add_pagamento(body.mes, body.data, body.pagamento, body.valor, body.apropriacao)
@@ -178,8 +178,8 @@ class PagamentoUpdate(BaseModel):
 
 @app.patch("/pagamentos/{pag_id}")
 def edit_pagamento(pag_id: int, body: PagamentoUpdate):
-    if body.valor <= 0:
-        raise HTTPException(status_code=400, detail="Valor deve ser positivo")
+    if body.valor == 0:
+        raise HTTPException(status_code=400, detail="Valor não pode ser zero")
     if body.apropriacao not in VALID_PAG_APROPRIACOES:
         raise HTTPException(status_code=400, detail="Apropriação inválida")
     update_pagamento(pag_id, body.data, body.pagamento, body.valor, body.apropriacao)
