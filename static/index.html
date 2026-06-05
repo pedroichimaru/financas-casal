@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css?v=2" />
+  <link rel="stylesheet" href="/static/style.css?v=26" />
 </head>
 <body>
 
@@ -26,8 +26,10 @@
         </div>
       </div>
       <nav>
-        <button class="nav-btn active" data-section="importar">Importar</button>
+        <button class="nav-btn active" data-section="inicio">Início</button>
+        <button class="nav-btn" data-section="importar">Importar</button>
         <button class="nav-btn" data-section="fechamento">Fechamento</button>
+        <button class="nav-btn" data-section="salarios">Salários</button>
       </nav>
     </div>
   </header>
@@ -35,7 +37,7 @@
   <main>
 
     <!-- ===== IMPORTAR ===== -->
-    <section id="section-importar">
+    <section id="section-importar" hidden>
 
       <div class="section-header">
         <h2>Importar despesas</h2>
@@ -118,6 +120,136 @@
 
     </section>
 
+    <!-- ===== INÍCIO (DASHBOARD) ===== -->
+    <section id="section-inicio">
+
+      <div class="section-header">
+        <h2>Início</h2>
+        <p>Visão geral das finanças do casal</p>
+      </div>
+
+      <div id="inicio-loading" class="loading" hidden>Carregando…</div>
+      <div id="inicio-empty" class="empty-state" hidden>Nenhum dado disponível ainda. Importe despesas para começar.</div>
+
+      <div id="inicio-content" hidden>
+        <div class="inicio-row">
+
+          <!-- Resumo do último mês -->
+          <div class="card inicio-box">
+            <div class="inicio-box-label">Resumo do Último Mês — <span id="inicio-mes-nome"></span></div>
+            <div class="inicio-resumo-grid">
+              <div class="inicio-resumo-card">
+                <div class="inicio-metric-label">Total Geral</div>
+                <div id="inicio-total-geral" class="inicio-metric-value">—</div>
+                <div id="inicio-total-split" class="summary-card__split"></div>
+              </div>
+              <div class="inicio-resumo-card">
+                <div class="inicio-metric-label">Saldo em Aberto Marina</div>
+                <div id="inicio-saldo" class="inicio-metric-value">—</div>
+                <div id="inicio-saldo-split" class="summary-card__split"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divisão de despesas Casa -->
+          <div class="card inicio-box">
+            <div id="inicio-sal-label" class="inicio-box-label">Divisão de Despesas Casa</div>
+            <div id="inicio-sal-cards" class="inicio-sal-cards"></div>
+          </div>
+
+        </div>
+
+        <!-- Histórico -->
+        <div class="card inicio-chart-card">
+          <div class="inicio-box-label">Histórico de Despesas — últimos 12 meses</div>
+          <div class="inicio-chart-wrap">
+            <canvas id="historico-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ===== SALÁRIOS ===== -->
+    <section id="section-salarios" hidden>
+
+      <div class="section-header">
+        <h2>Salários</h2>
+        <p>Cadastre os salários mensais para calcular a proporção de divisão das despesas Casa</p>
+      </div>
+
+      <!-- Summary cards -->
+      <div id="sal-summary" class="summary-cards" hidden></div>
+
+      <!-- Form card -->
+      <div class="card sal-form-card">
+        <div class="sal-form">
+          <div class="sal-form-group">
+            <label class="sal-form-label">Mês de referência</label>
+            <div class="month-selects">
+              <select id="sal-month">
+                <option value="">Mês</option>
+                <option value="Dezembro">Dezembro</option>
+                <option value="Novembro">Novembro</option>
+                <option value="Outubro">Outubro</option>
+                <option value="Setembro">Setembro</option>
+                <option value="Agosto">Agosto</option>
+                <option value="Julho">Julho</option>
+                <option value="Junho">Junho</option>
+                <option value="Maio">Maio</option>
+                <option value="Abril">Abril</option>
+                <option value="Março">Março</option>
+                <option value="Fevereiro">Fevereiro</option>
+                <option value="Janeiro">Janeiro</option>
+              </select>
+              <select id="sal-year"></select>
+            </div>
+          </div>
+          <div class="sal-form-group">
+            <label class="sal-form-label" for="sal-pedro">Pedro</label>
+            <div class="input-currency-wrap">
+              <span class="input-currency-prefix">R$</span>
+              <input type="number" id="sal-pedro" class="input-number" placeholder="0,00" min="0" step="0.01">
+            </div>
+          </div>
+          <div class="sal-form-group">
+            <label class="sal-form-label" for="sal-marina">Marina</label>
+            <div class="input-currency-wrap">
+              <span class="input-currency-prefix">R$</span>
+              <input type="number" id="sal-marina" class="input-number" placeholder="0,00" min="0" step="0.01">
+            </div>
+          </div>
+          <button id="btn-salvar-salario" class="btn-primary sal-save-btn">Salvar</button>
+        </div>
+        <div id="sal-form-error" class="error-banner" hidden></div>
+        <div id="sal-form-success" class="success-banner" hidden></div>
+      </div>
+
+      <div id="sal-loading" class="loading" hidden>Carregando…</div>
+      <div id="sal-empty" class="empty-state" hidden>Nenhum salário cadastrado ainda.</div>
+
+      <div id="sal-content" hidden>
+        <div class="table-wrapper">
+          <table id="salarios-table">
+            <thead>
+              <tr>
+                <th>Mês</th>
+                <th class="col-valor">Pedro</th>
+                <th class="col-valor">Marina</th>
+                <th class="col-valor">Média 12m Pedro</th>
+                <th class="col-valor">Média 12m Marina</th>
+                <th class="col-valor">% Pedro</th>
+                <th class="col-valor">% Marina</th>
+                <th class="col-del"></th>
+              </tr>
+            </thead>
+            <tbody id="sal-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
     <!-- ===== FECHAMENTO ===== -->
     <section id="section-fechamento" hidden>
 
@@ -132,6 +264,7 @@
           <select id="fechamento-mes-select">
             <option value="">Selecione o mês…</option>
           </select>
+          <button id="btn-zerar-mes" class="btn-danger" hidden>Zerar Mês</button>
         </div>
       </div>
 
@@ -139,17 +272,68 @@
       <div id="fechamento-empty" class="empty-state" hidden></div>
 
       <div id="fechamento-content" hidden>
+
+        <!-- Balanço -->
+        <div id="balanco-section" class="card balanco-card">
+          <div class="balanco-header">
+            <span class="balanco-label">Balanço — Marina</span>
+            <div class="balanco-total-row">
+              <span class="balanco-metric-label">Total devido</span>
+              <span id="balanco-total-val" class="balanco-metric-val">—</span>
+            </div>
+          </div>
+
+          <div class="balanco-form">
+            <input type="text" id="pag-data"  class="input-text pag-data"  placeholder="DD/MM/AAAA">
+            <input type="text" id="pag-desc"  class="input-text pag-desc"  placeholder="Descrição do pagamento">
+            <select id="pag-aprop" class="pag-aprop-sel">
+              <option value="Pedro">Pedro</option>
+              <option value="Casa">Casa</option>
+              <option value="50/50">50/50</option>
+            </select>
+            <div class="input-currency-wrap">
+              <span class="input-currency-prefix">R$</span>
+              <input type="number" id="pag-valor" class="input-number" placeholder="0,00" min="0" step="0.01">
+            </div>
+            <button id="btn-add-pag" class="btn-primary">Registrar</button>
+          </div>
+          <div id="pag-form-error" class="error-banner" hidden></div>
+
+          <div id="pag-table-wrap" hidden>
+            <table id="pagamentos-table">
+              <thead>
+                <tr>
+                  <th id="pag-th-data" class="th-sortable">Data<span class="sort-chip"></span></th>
+                  <th id="pag-th-pagamento" class="th-sortable">Pagamento<span class="sort-chip"></span></th>
+                  <th>Apropriação</th>
+                  <th id="pag-th-valor" class="th-sortable col-valor">Valor R$<span class="sort-chip"></span></th>
+                  <th class="col-valor">Abatimento R$</th>
+                  <th class="col-del"></th>
+                </tr>
+              </thead>
+              <tbody id="pag-body"></tbody>
+            </table>
+          </div>
+
+          <div class="balanco-saldo">
+            <span class="balanco-saldo-label">Saldo em Aberto</span>
+            <span id="balanco-saldo-val" class="balanco-saldo-val">—</span>
+          </div>
+        </div>
+
         <div id="fechamento-summary" class="summary-cards"></div>
+        <div id="id-totals-strip" class="id-totals-strip"></div>
         <div class="table-wrapper">
           <table id="fechamento-table">
             <thead>
               <tr>
-                <th>Data</th>
-                <th>Despesa</th>
-                <th class="col-valor">Valor R$</th>
-                <th>ID</th>
-                <th>Portador</th>
-                <th>Apropriação</th>
+                <th id="th-sort-data" class="th-sortable">Data<span class="sort-chip"></span></th>
+                <th id="th-sort-despesa" class="th-sortable">Despesa<span class="sort-chip"></span></th>
+                <th id="th-sort-valor" class="th-sortable col-valor">Valor R$<span class="sort-chip"></span></th>
+                <th id="th-sort-id" class="th-sortable">ID<span class="sort-chip"></span><button id="th-id-filter-btn" class="th-filter-btn" title="Filtrar por ID"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button></th>
+                <th id="th-sort-portador" class="th-sortable">Portador<span class="sort-chip"></span><button id="th-portador-filter-btn" class="th-filter-btn" title="Filtrar por Portador"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button></th>
+                <th id="th-sort-aprop" class="th-sortable">Apropriação<span class="sort-chip"></span><button id="th-aprop-filter-btn" class="th-filter-btn" title="Filtrar por Apropriação"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg></button></th>
+                <th class="col-del"></th>
               </tr>
             </thead>
             <tbody id="fechamento-body"></tbody>
@@ -162,6 +346,92 @@
 
   </main>
 
-  <script src="/static/app.js?v=2"></script>
+  <!-- Edit Salary Modal -->
+  <div id="edit-sal-overlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <h3 id="edit-sal-title">Editar salário</h3>
+      <div class="edit-pag-form">
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="edit-sal-pedro">Pedro</label>
+          <div class="input-currency-wrap edit-pag-input">
+            <span class="input-currency-prefix">R$</span>
+            <input type="number" id="edit-sal-pedro" class="input-number" style="flex:1" placeholder="0,00" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="edit-sal-marina">Marina</label>
+          <div class="input-currency-wrap edit-pag-input">
+            <span class="input-currency-prefix">R$</span>
+            <input type="number" id="edit-sal-marina" class="input-number" style="flex:1" placeholder="0,00" min="0" step="0.01">
+          </div>
+        </div>
+      </div>
+      <div id="edit-sal-error" class="error-banner" hidden></div>
+      <div class="modal-actions">
+        <button id="edit-sal-cancel" class="btn-secondary">Cancelar</button>
+        <button id="edit-sal-save" class="btn-primary">Salvar alteração</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Payment Modal -->
+  <div id="edit-pag-overlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <h3>Editar pagamento</h3>
+      <div class="edit-pag-form">
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="edit-pag-data">Data</label>
+          <input type="text" id="edit-pag-data" class="input-text edit-pag-input" placeholder="DD/MM/AAAA">
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="edit-pag-desc">Descrição</label>
+          <input type="text" id="edit-pag-desc" class="input-text edit-pag-input" placeholder="Descrição do pagamento">
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="edit-pag-aprop">Apropriação</label>
+          <select id="edit-pag-aprop" class="edit-pag-input">
+            <option value="Pedro">Pedro</option>
+            <option value="Casa">Casa</option>
+            <option value="50/50">50/50</option>
+          </select>
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="edit-pag-valor">Valor</label>
+          <div class="input-currency-wrap edit-pag-input">
+            <span class="input-currency-prefix">R$</span>
+            <input type="number" id="edit-pag-valor" class="input-number" style="flex:1" placeholder="0,00" min="0" step="0.01">
+          </div>
+        </div>
+      </div>
+      <div id="edit-pag-error" class="error-banner" hidden></div>
+      <div class="modal-actions">
+        <button id="edit-pag-cancel" class="btn-secondary">Cancelar</button>
+        <button id="edit-pag-save" class="btn-primary">Salvar alteração</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirm-modal-overlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <div class="modal-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+      </div>
+      <h3 id="confirm-modal-title">Confirmar exclusão</h3>
+      <p id="confirm-modal-desc"></p>
+      <div class="modal-actions">
+        <button id="confirm-modal-cancel" class="btn-secondary">Cancelar</button>
+        <button id="confirm-modal-ok" class="btn-danger">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="/static/app.js?v=26"></script>
 </body>
 </html>
