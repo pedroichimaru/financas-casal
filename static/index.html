@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css?v=26" />
+  <link rel="stylesheet" href="/static/style.css?v=28" />
 </head>
 <body>
 
@@ -138,13 +138,13 @@
           <div class="card inicio-box">
             <div class="inicio-box-label">Resumo do Último Mês — <span id="inicio-mes-nome"></span></div>
             <div class="inicio-resumo-grid">
-              <div class="inicio-resumo-card">
+              <div class="inicio-resumo-card inicio-resumo-card--dark" id="card-total-geral">
                 <div class="inicio-metric-label">Total Geral</div>
                 <div id="inicio-total-geral" class="inicio-metric-value">—</div>
                 <div id="inicio-total-split" class="summary-card__split"></div>
               </div>
-              <div class="inicio-resumo-card">
-                <div class="inicio-metric-label">Saldo em Aberto Marina</div>
+              <div class="inicio-resumo-card" id="card-saldo">
+                <div class="inicio-metric-label" id="card-saldo-label">Saldo em Aberto Marina</div>
                 <div id="inicio-saldo" class="inicio-metric-value">—</div>
                 <div id="inicio-saldo-split" class="summary-card__split"></div>
               </div>
@@ -432,6 +432,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <script src="/static/app.js?v=27"></script>
+  <script src="/static/app.js?v=28"></script>
 </body>
 </html>

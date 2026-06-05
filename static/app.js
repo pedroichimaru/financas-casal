@@ -68,6 +68,22 @@ function renderDashboard(data) {
     { cls: "pedro",  label: "Abatido",    val: um.total_abatimentos },
   ]});
 
+  // Saldo card: cor e título condicionais
+  const cardSaldo      = document.getElementById("card-saldo");
+  const cardSaldoLabel = document.getElementById("card-saldo-label");
+  if (cardSaldo) {
+    cardSaldo.className = um.saldo_aberto > 0
+      ? "inicio-resumo-card inicio-resumo-card--danger"
+      : "inicio-resumo-card inicio-resumo-card--success";
+  }
+  if (cardSaldoLabel) {
+    cardSaldoLabel.textContent = um.saldo_aberto > 0
+      ? "Saldo em Aberto Marina"
+      : "Sobrepago Marina";
+  }
+  const saldoMetricEl = document.getElementById("inicio-saldo");
+  if (saldoMetricEl) saldoMetricEl.className = "inicio-metric-value";
+
   // 2. Salários
   const salLabel = document.getElementById("inicio-sal-label");
   if (salLabel) salLabel.textContent = `Divisão de Despesas Casa — ${um.mes}`;
@@ -105,6 +121,12 @@ function renderHistoricoChart(historico) {
   if (!canvas || typeof Chart === "undefined") return;
   if (_historicoChart) { _historicoChart.destroy(); _historicoChart = null; }
 
+  // fade-in: começa invisível
+  canvas.style.opacity = "0";
+  canvas.style.transition = "";
+
+  const font = { family: "'IBM Plex Sans', sans-serif" };
+
   const labels = historico.map(h => {
     const [name, year] = h.mes.split("/");
     return `${name.slice(0, 3)}/${year.slice(2)}`;
@@ -133,31 +155,47 @@ function renderHistoricoChart(historico) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      animation: { duration: 0 },
+      interaction: { mode: "index", intersect: false },
       layout: { padding: { top: 32, bottom: 24 } },
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${formatBRL(ctx.parsed.y)}` } },
+        tooltip: {
+          titleFont: { ...font, size: 12, weight: "600" },
+          bodyFont:  { ...font, size: 12 },
+          padding: 10,
+          callbacks: {
+            title: (items) => items[0]?.label || "",
+            label: (ctx) => `  ${ctx.dataset.label}: ${formatBRL(ctx.parsed.y)}`,
+          },
+        },
         datalabels: {
           offset: 0,
           backgroundColor: (ctx) => ctx.dataset.borderColor,
           borderRadius: 8,
           color: "#fff",
-          font: { size: 9, weight: "700", family: "'IBM Plex Sans', sans-serif" },
+          font: { size: 9, weight: "700", ...font },
           formatter: (v) => `${Math.round(v / 1000)}k`,
           padding: { top: 3, bottom: 3, left: 5, right: 5 },
         },
       },
       scales: {
         y: {
-          ticks: { callback: (v) => formatBRL(v), font: { family: "'IBM Plex Sans', sans-serif", size: 11 }, maxTicksLimit: 6 },
+          ticks: { callback: (v) => formatBRL(v), font: { ...font, size: 11 }, maxTicksLimit: 6 },
           grid: { color: "rgba(0,0,0,0.05)" },
         },
         x: {
-          ticks: { font: { family: "'IBM Plex Sans', sans-serif", size: 11 } },
+          ticks: { font: { ...font, size: 11 } },
           grid: { display: false },
         },
       },
     },
+  });
+
+  // fade-in após render
+  requestAnimationFrame(() => {
+    canvas.style.transition = "opacity 0.7s ease-in-out";
+    canvas.style.opacity = "1";
   });
 }
 

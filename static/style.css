@@ -1282,17 +1282,38 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 .inicio-resumo-card {
   flex: 1;
   background: var(--surface-2);
-  border-radius: var(--r);
+  border-radius: var(--r-lg);
   border: 1px solid var(--border);
   padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
 }
 
 /* fix 1: remove horizontal lines inside resumo cards */
-.inicio-resumo-card .summary-card__split {
-  border-top: none;
-  padding-top: 0;
-  margin-top: 8px;
-}
+.inicio-resumo-card .summary-card__split { border-top: none; padding-top: 0; margin-top: 8px; }
+
+/* dark card variants */
+.inicio-resumo-card--dark    { background: var(--navy);    border-color: var(--navy); }
+.inicio-resumo-card--danger  { background: var(--error);   border-color: var(--error); }
+.inicio-resumo-card--success { background: var(--success); border-color: var(--success); }
+
+.inicio-resumo-card--dark .inicio-metric-label,
+.inicio-resumo-card--danger .inicio-metric-label,
+.inicio-resumo-card--success .inicio-metric-label { color: rgba(255,255,255,0.6); }
+
+.inicio-resumo-card--dark .inicio-metric-value,
+.inicio-resumo-card--danger .inicio-metric-value,
+.inicio-resumo-card--success .inicio-metric-value { color: #fff !important; }
+
+.inicio-resumo-card--dark .split-pill__label,
+.inicio-resumo-card--danger .split-pill__label,
+.inicio-resumo-card--success .split-pill__label { color: rgba(255,255,255,0.55); }
+
+.inicio-resumo-card--dark .split-pill__val,
+.inicio-resumo-card--danger .split-pill__val,
+.inicio-resumo-card--success .split-pill__val { color: #fff; }
+
+/* chart canvas fade-in */
+#historico-chart { transition: opacity 0.7s ease-in-out; }
 
 .inicio-metric-label {
   font-size: 0.75rem;
