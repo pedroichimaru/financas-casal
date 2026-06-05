@@ -94,6 +94,8 @@ header {
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  user-select: none;
 }
 
 .logo-icon {
