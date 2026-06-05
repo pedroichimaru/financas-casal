@@ -1,7 +1,8 @@
+import os
 import sqlite3
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent / "financas.db"
+DB_PATH = Path(os.environ.get("DB_PATH", str(Path(__file__).parent / "financas.db")))
 
 _MONTH_NUM = {
     "janeiro": "01", "fevereiro": "02", "março": "03", "abril": "04",
