@@ -1312,8 +1312,11 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 .inicio-resumo-card--danger .split-pill__val,
 .inicio-resumo-card--success .split-pill__val { color: #fff; }
 
-.inicio-resumo-card--danger  .split-pill__dot,
-.inicio-resumo-card--success .split-pill__dot { background: rgba(255,255,255,0.85) !important; }
+.inicio-resumo-card--danger  .split-pill--marina .split-pill__dot,
+.inicio-resumo-card--success .split-pill--marina .split-pill__dot { background: #FCA5A5 !important; }
+
+.inicio-resumo-card--danger  .split-pill--pedro .split-pill__dot,
+.inicio-resumo-card--success .split-pill--pedro .split-pill__dot { background: #86EFAC !important; }
 
 /* chart canvas fade-in */
 #historico-chart { transition: opacity 0.7s ease-in-out; }
