@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finanças Casal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css?v=2" />
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>Finanças Casal</h1>
+          <p class="subtitle">Gestão financeira mensal</p>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-btn active" data-section="importar">Importar</button>
+        <button class="nav-btn" data-section="fechamento">Fechamento</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ===== IMPORTAR ===== -->
+    <section id="section-importar">
+
+      <div class="section-header">
+        <h2>Importar despesas</h2>
+        <p>Selecione o mês de referência e faça o upload do extrato XLSX</p>
+      </div>
+
+      <div id="upload-section" class="card">
+        <div id="month-picker">
+          <label for="select-month">Mês de fechamento</label>
+          <div class="month-selects">
+            <select id="select-month">
+              <option value="">Mês</option>
+              <option value="Janeiro">Janeiro</option>
+              <option value="Fevereiro">Fevereiro</option>
+              <option value="Março">Março</option>
+              <option value="Abril">Abril</option>
+              <option value="Maio">Maio</option>
+              <option value="Junho">Junho</option>
+              <option value="Julho">Julho</option>
+              <option value="Agosto">Agosto</option>
+              <option value="Setembro">Setembro</option>
+              <option value="Outubro">Outubro</option>
+              <option value="Novembro">Novembro</option>
+              <option value="Dezembro">Dezembro</option>
+            </select>
+            <select id="select-year">
+              <option value="">Ano</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="drop-zone">
+          <div class="drop-zone-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p>Arraste o arquivo XLSX aqui</p>
+          <span>ou clique para selecionar</span>
+          <label for="file-input" class="btn-secondary">Selecionar arquivo</label>
+          <input type="file" id="file-input" accept=".xlsx" hidden />
+        </div>
+        <div id="file-name"></div>
+      </div>
+
+      <div id="result-section" hidden>
+        <div class="result-header">
+          <div class="result-meta">
+            <span id="month-badge"></span>
+            <span id="count-badge"></span>
+            <span id="total-badge"></span>
+          </div>
+          <div class="result-actions">
+            <button id="btn-clear" class="btn-secondary">Limpar</button>
+            <button id="btn-import" class="btn-primary">Importar despesas</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="expenses-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Despesa</th>
+                <th class="col-valor">Valor R$</th>
+                <th>ID</th>
+                <th>Portador</th>
+              </tr>
+            </thead>
+            <tbody id="expenses-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="error-banner" class="error-banner" hidden></div>
+      <div id="loading" class="loading" hidden>Processando…</div>
+      <div id="import-success" class="success-banner" hidden></div>
+
+    </section>
+
+    <!-- ===== FECHAMENTO ===== -->
+    <section id="section-fechamento" hidden>
+
+      <div class="section-header">
+        <h2>Fechamento mensal</h2>
+        <p>Despesas consolidadas e totais por apropriação</p>
+      </div>
+
+      <div class="fechamento-card">
+        <div class="fechamento-controls">
+          <label for="fechamento-mes-select">Mês de referência</label>
+          <select id="fechamento-mes-select">
+            <option value="">Selecione o mês…</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="fechamento-loading" class="loading" hidden>Carregando…</div>
+      <div id="fechamento-empty" class="empty-state" hidden></div>
+
+      <div id="fechamento-content" hidden>
+        <div id="fechamento-summary" class="summary-cards"></div>
+        <div class="table-wrapper">
+          <table id="fechamento-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Despesa</th>
+                <th class="col-valor">Valor R$</th>
+                <th>ID</th>
+                <th>Portador</th>
+                <th>Apropriação</th>
+              </tr>
+            </thead>
+            <tbody id="fechamento-body"></tbody>
+            <tfoot id="fechamento-foot"></tfoot>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="/static/app.js?v=2"></script>
+</body>
+</html>
