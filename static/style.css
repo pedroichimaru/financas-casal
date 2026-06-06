@@ -1201,6 +1201,9 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 .balanco-saldo-val { font-size: 1.125rem; font-weight: 700; color: var(--text); }
 .saldo-aberto  { color: var(--marina-accent); }
 .saldo-quitado { color: var(--success); }
+.saldo-zerado  { color: var(--text-muted); }
+
+.inicio-resumo-card--neutral { background: var(--text-muted); border-color: var(--text-muted); }
 
 /* ===== ID TOTALS STRIP ===== */
 .id-totals-strip {

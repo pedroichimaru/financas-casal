@@ -77,14 +77,22 @@ function renderDashboard(data) {
   const cardSaldo      = document.getElementById("card-saldo");
   const cardSaldoLabel = document.getElementById("card-saldo-label");
   if (cardSaldo) {
-    cardSaldo.className = um.saldo_aberto > 0
-      ? "inicio-resumo-card inicio-resumo-card--danger"
-      : "inicio-resumo-card inicio-resumo-card--success";
+    if (Math.abs(um.saldo_aberto) < 0.01) {
+      cardSaldo.className = "inicio-resumo-card inicio-resumo-card--neutral";
+    } else if (um.saldo_aberto > 0) {
+      cardSaldo.className = "inicio-resumo-card inicio-resumo-card--danger";
+    } else {
+      cardSaldo.className = "inicio-resumo-card inicio-resumo-card--success";
+    }
   }
   if (cardSaldoLabel) {
-    cardSaldoLabel.textContent = um.saldo_aberto > 0
-      ? "Saldo em Aberto Marina"
-      : "Sobrepago Marina";
+    if (Math.abs(um.saldo_aberto) < 0.01) {
+      cardSaldoLabel.textContent = "Balanço Zerado";
+    } else if (um.saldo_aberto > 0) {
+      cardSaldoLabel.textContent = "Saldo em Aberto Marina";
+    } else {
+      cardSaldoLabel.textContent = "Sobrepago Marina";
+    }
   }
   const saldoMetricEl = document.getElementById("inicio-saldo");
   if (saldoMetricEl) saldoMetricEl.className = "inicio-metric-value";
@@ -1040,16 +1048,16 @@ function renderBalancoSaldo() {
 
   totalEl.textContent = formatBRL(_totalMarina);
   saldoEl.textContent = formatBRL(Math.abs(saldo));
-  saldoEl.className   = "balanco-saldo-val " + (saldo <= 0 ? "saldo-quitado" : "saldo-aberto");
-
   const labelEl = document.querySelector(".balanco-saldo-label");
-  if (labelEl) {
-    if (saldo < 0) {
-      const proximo = nextMonthLabel(fechamentoSel.value);
-      labelEl.textContent = `Sobrepago — Crédito para ${proximo}`;
-    } else {
-      labelEl.textContent = "Saldo em Aberto";
-    }
+  if (Math.abs(saldo) < 0.01) {
+    saldoEl.className = "balanco-saldo-val saldo-zerado";
+    if (labelEl) labelEl.textContent = "Balanço Zerado";
+  } else if (saldo < 0) {
+    saldoEl.className = "balanco-saldo-val saldo-quitado";
+    if (labelEl) labelEl.textContent = `Sobrepago — Crédito para ${nextMonthLabel(fechamentoSel.value)}`;
+  } else {
+    saldoEl.className = "balanco-saldo-val saldo-aberto";
+    if (labelEl) labelEl.textContent = "Saldo em Aberto";
   }
 }
 
