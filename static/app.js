@@ -244,6 +244,10 @@ function renderHistoricoChart(historico) {
     },
   };
 
+  const totalPeriodo = historico.reduce((acc, h) => acc + (h.total || 0), 0);
+  const totalEl = document.getElementById("historico-total-periodo");
+  if (totalEl) totalEl.textContent = `Total do Período: ${formatBRL(totalPeriodo)}`;
+
   _historicoChart = new Chart(canvas, {
     type: "line",
     plugins: [overlayPlugin],

@@ -1364,6 +1364,19 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 }
 .inicio-chart-header .inicio-box-label { margin-bottom: 0; }
 
+.chart-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.historico-total-periodo {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .periodo-sel {
   display: flex;
   gap: 3px;
