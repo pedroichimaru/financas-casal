@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css?v=28" />
+  <link rel="stylesheet" href="/static/style.css?v=29" />
 </head>
 <body>
 
@@ -50,18 +50,18 @@
           <div class="month-selects">
             <select id="select-month">
               <option value="">Mês</option>
-              <option value="Janeiro">Janeiro</option>
-              <option value="Fevereiro">Fevereiro</option>
-              <option value="Março">Março</option>
-              <option value="Abril">Abril</option>
-              <option value="Maio">Maio</option>
-              <option value="Junho">Junho</option>
-              <option value="Julho">Julho</option>
-              <option value="Agosto">Agosto</option>
-              <option value="Setembro">Setembro</option>
-              <option value="Outubro">Outubro</option>
-              <option value="Novembro">Novembro</option>
               <option value="Dezembro">Dezembro</option>
+              <option value="Novembro">Novembro</option>
+              <option value="Outubro">Outubro</option>
+              <option value="Setembro">Setembro</option>
+              <option value="Agosto">Agosto</option>
+              <option value="Julho">Julho</option>
+              <option value="Junho">Junho</option>
+              <option value="Maio">Maio</option>
+              <option value="Abril">Abril</option>
+              <option value="Março">Março</option>
+              <option value="Fevereiro">Fevereiro</option>
+              <option value="Janeiro">Janeiro</option>
             </select>
             <select id="select-year">
               <option value="">Ano</option>
@@ -260,10 +260,16 @@
 
       <div class="fechamento-card">
         <div class="fechamento-controls">
-          <label for="fechamento-mes-select">Mês de referência</label>
-          <select id="fechamento-mes-select">
-            <option value="">Selecione o mês…</option>
-          </select>
+          <div class="mes-nav" id="mes-nav">
+            <button class="mes-nav-arrow" id="btn-mes-prev" title="Mês anterior">&#8249;</button>
+            <button class="mes-nav-label-btn" id="mes-nav-label-btn">
+              <span id="mes-nav-text">—</span>
+              <svg class="mes-nav-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <button class="mes-nav-arrow" id="btn-mes-next" title="Próximo mês">&#8250;</button>
+            <div class="mes-nav-dropdown" id="mes-nav-dropdown" hidden></div>
+          </div>
+          <select id="fechamento-mes-select" hidden></select>
           <button id="btn-zerar-mes" class="btn-danger" hidden>Zerar Mês</button>
         </div>
       </div>
@@ -432,6 +438,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <script src="/static/app.js?v=28"></script>
+  <script src="/static/app.js?v=29"></script>
 </body>
 </html>

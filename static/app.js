@@ -15,6 +15,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
     document.getElementById("section-salarios").hidden   = section !== "salarios";
     closeFilterPanel();
     closeApropDropdown();
+    closeMesDropdown();
     if (section === "inicio")     initInicio();
     if (section === "fechamento") initFechamento();
     if (section === "salarios")  initSalarios();
@@ -227,7 +228,7 @@ const selectYear    = document.getElementById("select-year");
 
 // Populate year dropdown
 const currentYear = new Date().getFullYear();
-for (let y = currentYear; y >= currentYear - 4; y--) {
+for (let y = currentYear; y >= 2025; y--) {
   const opt = document.createElement("option");
   opt.value = y;
   opt.textContent = y;
@@ -379,6 +380,8 @@ const fechamentoSummary = document.getElementById("fechamento-summary");
 const btnZerarMes       = document.getElementById("btn-zerar-mes");
 
 let _mesesLoaded     = false;
+let _meses           = [];
+let _currentMesIdx   = -1;
 let _currentExpenses = [];
 let _openFilterPanel = null;
 let _apropDropdown   = null;
@@ -443,6 +446,9 @@ PAG_SORT_COLS.forEach(({ key, thId }) => {
 });
 document.getElementById("pag-body").addEventListener("click", onPagDelBtnClick);
 document.getElementById("pag-body").addEventListener("click", onPagEditBtnClick);
+document.getElementById("btn-mes-prev").addEventListener("click", (e) => { e.stopPropagation(); selectMesIdx(_currentMesIdx + 1); });
+document.getElementById("btn-mes-next").addEventListener("click", (e) => { e.stopPropagation(); selectMesIdx(_currentMesIdx - 1); });
+document.getElementById("mes-nav-label-btn").addEventListener("click", (e) => { e.stopPropagation(); toggleMesDropdown(); });
 document.getElementById("btn-add-pag").addEventListener("click", addPagamento);
 document.getElementById("edit-pag-save").addEventListener("click", saveEditPagamento);
 document.getElementById("edit-pag-cancel").addEventListener("click", exitEditMode);
@@ -470,22 +476,70 @@ async function initFechamento() {
 
   try {
     const res = await fetch("/meses");
-    const meses = await res.json();
+    _meses = await res.json();
     fechamentoSel.innerHTML = '<option value="">Selecione o mês…</option>';
-    meses.forEach((m) => {
+    _meses.forEach((m) => {
       const opt = document.createElement("option");
-      opt.value = m;
-      opt.textContent = m;
+      opt.value = m; opt.textContent = m;
       fechamentoSel.appendChild(opt);
     });
-    if (meses.length === 0) {
+    if (_meses.length === 0) {
       fechamentoEmpty.textContent = "Nenhum mês importado ainda. Importe um XLSX primeiro.";
       fechamentoEmpty.hidden = false;
+      updateMesNav();
+      return;
     }
+    selectMesIdx(0); // auto-carrega o mês mais recente
   } catch {
     fechamentoEmpty.textContent = "Erro ao carregar meses.";
     fechamentoEmpty.hidden = false;
   }
+}
+
+function selectMesIdx(idx) {
+  if (idx < 0 || idx >= _meses.length) return;
+  _currentMesIdx = idx;
+  updateMesNav();
+  fechamentoSel.value = _meses[idx];
+  fechamentoSel.dispatchEvent(new Event("change"));
+}
+
+function updateMesNav() {
+  const textEl  = document.getElementById("mes-nav-text");
+  const prevBtn = document.getElementById("btn-mes-prev");
+  const nextBtn = document.getElementById("btn-mes-next");
+  if (textEl)  textEl.textContent = _currentMesIdx >= 0 ? _meses[_currentMesIdx] : "—";
+  if (prevBtn) prevBtn.disabled   = _currentMesIdx >= _meses.length - 1;
+  if (nextBtn) nextBtn.disabled   = _currentMesIdx <= 0;
+}
+
+function toggleMesDropdown() {
+  const dropdown = document.getElementById("mes-nav-dropdown");
+  if (!dropdown.hidden) { closeMesDropdown(); return; }
+  dropdown.innerHTML = "";
+  _meses.forEach((mes, idx) => {
+    const item = document.createElement("div");
+    item.className = "mes-nav-item" + (idx === _currentMesIdx ? " mes-nav-item--active" : "");
+    item.textContent = mes;
+    item.addEventListener("click", () => { closeMesDropdown(); selectMesIdx(idx); });
+    dropdown.appendChild(item);
+  });
+  dropdown.hidden = false;
+  document.getElementById("mes-nav-label-btn").classList.add("open");
+  setTimeout(() => document.addEventListener("click", onOutsideMesNav, true), 0);
+}
+
+function closeMesDropdown() {
+  const dropdown = document.getElementById("mes-nav-dropdown");
+  if (!dropdown || dropdown.hidden) return;
+  dropdown.hidden = true;
+  document.getElementById("mes-nav-label-btn")?.classList.remove("open");
+  document.removeEventListener("click", onOutsideMesNav, true);
+}
+
+function onOutsideMesNav(e) {
+  const nav = document.getElementById("mes-nav");
+  if (nav && !nav.contains(e.target)) closeMesDropdown();
 }
 
 fechamentoSel.addEventListener("change", async () => {
@@ -1184,8 +1238,16 @@ async function execDeleteMes(mes) {
     fechamentoContent.hidden = true;
     btnZerarMes.hidden = true;
     _currentExpenses = [];
+    const deletedIdx = _meses.indexOf(mes);
+    _meses = _meses.filter(m => m !== mes);
     [...fechamentoSel.options].forEach(o => { if (o.value === mes) o.remove(); });
     fechamentoSel.value = "";
+    if (_meses.length > 0) {
+      _currentMesIdx = Math.min(deletedIdx, _meses.length - 1);
+    } else {
+      _currentMesIdx = -1;
+    }
+    updateMesNav();
     fechamentoEmpty.textContent = `Mês ${mes} zerado. Importe novamente para reinserir os dados.`;
     fechamentoEmpty.hidden = false;
   } catch { /* silent */ }
