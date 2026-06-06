@@ -134,7 +134,6 @@ function renderHistoricoChart(historico) {
   if (!canvas || typeof Chart === "undefined") return;
   if (_historicoChart) { _historicoChart.destroy(); _historicoChart = null; }
 
-  // fade-in: começa invisível
   canvas.style.opacity = "0";
   canvas.style.transition = "";
 
@@ -145,24 +144,80 @@ function renderHistoricoChart(historico) {
     return `${name.slice(0, 3)}/${year.slice(2)}`;
   });
 
-  const mkDs = (label, data, color, dlAlign) => ({
+  const mkDs = (label, data, color) => ({
     label, data,
     borderColor: color,
     backgroundColor: "transparent",
     pointBackgroundColor: color,
     pointBorderColor: color,
-    borderWidth: 1.5, tension: 0.3, pointRadius: 3, pointHoverRadius: 5, fill: false,
+    borderWidth: 2, tension: 0.3,
+    pointRadius: 0, pointHoverRadius: 0,
+    fill: false,
     datalabels: { display: false },
   });
 
+  // Plugin: grid de janeiro + crosshair com donut
+  const overlayPlugin = {
+    id: "historicoOverlay",
+    afterDraw(chart) {
+      const ctx  = chart.ctx;
+      const yAxis = chart.scales.y;
+      const meta0 = chart.getDatasetMeta(0);
+
+      // Linhas verticais em todo janeiro
+      ctx.save();
+      ctx.strokeStyle = "rgba(0,0,0,0.06)";
+      ctx.lineWidth = 1;
+      labels.forEach((lbl, i) => {
+        if (lbl?.startsWith("Jan") && meta0.data[i]) {
+          ctx.beginPath();
+          ctx.moveTo(meta0.data[i].x, yAxis.top);
+          ctx.lineTo(meta0.data[i].x, yAxis.bottom);
+          ctx.stroke();
+        }
+      });
+      ctx.restore();
+
+      // Crosshair + donuts no hover
+      const tooltip = chart.tooltip;
+      if (!tooltip?._active?.length) return;
+
+      const x = tooltip._active[0].element.x;
+
+      ctx.save();
+      // Linha vertical
+      ctx.beginPath();
+      ctx.moveTo(x, yAxis.top);
+      ctx.lineTo(x, yAxis.bottom);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(0,0,0,0.18)";
+      ctx.stroke();
+
+      // Donut em cada série
+      tooltip._active.forEach(active => {
+        const el    = active.element;
+        const color = chart.data.datasets[active.datasetIndex].borderColor;
+        ctx.beginPath();
+        ctx.arc(el.x, el.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle   = "rgba(255,255,255,0.85)";
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = 2;
+        ctx.fill();
+        ctx.stroke();
+      });
+      ctx.restore();
+    },
+  };
+
   _historicoChart = new Chart(canvas, {
     type: "line",
+    plugins: [overlayPlugin],
     data: {
       labels,
       datasets: [
-        mkDs("Total Geral", historico.map(h => h.total),  "#0F172A", "top"),
-        mkDs("Pedro",       historico.map(h => h.pedro),  "#16A34A", "top"),
-        mkDs("Marina",      historico.map(h => h.marina), "#DB2777", "bottom"),
+        mkDs("Total Geral", historico.map(h => h.total),  "#0F172A"),
+        mkDs("Pedro",       historico.map(h => h.pedro),  "#16A34A"),
+        mkDs("Marina",      historico.map(h => h.marina), "#DB2777"),
       ],
     },
     options: {
@@ -170,7 +225,7 @@ function renderHistoricoChart(historico) {
       maintainAspectRatio: false,
       animation: { duration: 0 },
       interaction: { mode: "index", intersect: false },
-      layout: { padding: { top: 32, bottom: 24 } },
+      layout: { padding: { top: 16, bottom: 16 } },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -182,24 +237,16 @@ function renderHistoricoChart(historico) {
             label: (ctx) => `  ${ctx.dataset.label}: ${formatBRL(ctx.parsed.y)}`,
           },
         },
-        datalabels: {
-          offset: 0,
-          backgroundColor: (ctx) => ctx.dataset.borderColor,
-          borderRadius: 8,
-          color: "#fff",
-          font: { size: 9, weight: "700", ...font },
-          formatter: (v) => `${Math.round(v / 1000)}k`,
-          padding: { top: 3, bottom: 3, left: 5, right: 5 },
-        },
+        datalabels: { display: false },
       },
       scales: {
         y: {
-          ticks: { callback: (v) => formatBRL(v), font: { ...font, size: 11 }, maxTicksLimit: 6 },
-          grid: { color: "rgba(0,0,0,0.05)" },
+          ticks: { callback: (v) => formatBRL(v), font: { ...font, size: 11 }, maxTicksLimit: 8 },
+          grid:  { color: "rgba(0,0,0,0.05)" },
         },
         x: {
-          ticks: { font: { ...font, size: 11 } },
-          grid: { display: false },
+          ticks: { font: { ...font, size: 10 }, maxRotation: 0 },
+          grid:  { display: false },
         },
       },
     },
