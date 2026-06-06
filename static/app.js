@@ -25,7 +25,24 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
 // ===== INÍCIO (DASHBOARD) =====
 
 if (typeof ChartDataLabels !== "undefined") Chart.register(ChartDataLabels);
-let _historicoChart = null;
+let _historicoChart   = null;
+let _historicoAllData = [];
+let _periodMeses      = 0;  // 0 = histórico completo
+
+// Seletor de período do gráfico
+document.querySelectorAll(".periodo-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".periodo-btn").forEach(b => b.classList.remove("periodo-btn--active"));
+    btn.classList.add("periodo-btn--active");
+    _periodMeses = parseInt(btn.dataset.meses) || 0;
+    renderHistoricoChart(getFilteredHistorico());
+  });
+});
+
+function getFilteredHistorico() {
+  if (_periodMeses === 0 || _historicoAllData.length <= _periodMeses) return _historicoAllData;
+  return _historicoAllData.slice(_historicoAllData.length - _periodMeses);
+}
 
 function initInicio() {
   loadDashboard();
@@ -103,7 +120,8 @@ function renderDashboard(data) {
   renderDashSalarios(data.salarios);
 
   // 3. Gráfico
-  renderHistoricoChart(data.historico);
+  _historicoAllData = data.historico;
+  renderHistoricoChart(getFilteredHistorico());
 }
 
 function renderDashSalarios(sal) {

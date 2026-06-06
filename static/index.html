@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css?v=31" />
+  <link rel="stylesheet" href="/static/style.css?v=33" />
 </head>
 <body>
 
@@ -161,7 +161,15 @@
 
         <!-- Histórico -->
         <div class="card inicio-chart-card">
-          <div class="inicio-box-label">Histórico de Despesas</div>
+          <div class="inicio-chart-header">
+            <div class="inicio-box-label">Histórico de Despesas</div>
+            <div class="periodo-sel">
+              <button class="periodo-btn" data-meses="12">1 ano</button>
+              <button class="periodo-btn" data-meses="24">2 anos</button>
+              <button class="periodo-btn" data-meses="60">5 anos</button>
+              <button class="periodo-btn periodo-btn--active" data-meses="0">Histórico Completo</button>
+            </div>
+          </div>
           <div class="inicio-chart-wrap">
             <canvas id="historico-chart"></canvas>
           </div>
@@ -438,6 +446,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <script src="/static/app.js?v=32"></script>
+  <script src="/static/app.js?v=33"></script>
 </body>
 </html>

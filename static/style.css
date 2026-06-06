@@ -1355,7 +1355,42 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 .inicio-sal-cards .summary-card { flex: 1; min-width: 130px; }
 
 .inicio-chart-card { padding: 22px 24px; margin-bottom: 24px; }
-.inicio-chart-wrap { position: relative; height: 560px; margin-top: 12px; }
+
+.inicio-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.inicio-chart-header .inicio-box-label { margin-bottom: 0; }
+
+.periodo-sel {
+  display: flex;
+  gap: 3px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 3px;
+}
+
+.periodo-btn {
+  border: none;
+  background: none;
+  padding: 5px 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.periodo-btn:hover:not(.periodo-btn--active) { background: var(--surface); color: var(--text); }
+.periodo-btn--active { background: var(--navy); color: #fff; font-weight: 600; }
+
+.inicio-chart-wrap { position: relative; height: 560px; }
 
 /* ===== MES NAV (FECHAMENTO) ===== */
 .mes-nav {
