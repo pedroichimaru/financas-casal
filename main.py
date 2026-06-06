@@ -255,7 +255,7 @@ def dashboard():
 
     # Historico – last 12 months oldest first
     historico = []
-    for mes in reversed(meses[:12]):
+    for mes in reversed(meses):
         exp  = get_expenses_by_mes(mes)
         prop = get_proporcao_for_mes(mes)
         tot: dict[str, float] = {"Pedro": 0, "Marina": 0, "Casa": 0, "50/50": 0}
