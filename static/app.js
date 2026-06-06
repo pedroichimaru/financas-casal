@@ -1203,8 +1203,8 @@ function sortPagamentos(colKey) {
     const pa = _currentPagamentos.find(p => String(p.id) === a.dataset.pagid);
     const pb = _currentPagamentos.find(p => String(p.id) === b.dataset.pagid);
     if (!pa || !pb) return 0;
-    const va = colKey === "valor" ? pa[colKey] : String(pa[colKey]);
-    const vb = colKey === "valor" ? pb[colKey] : String(pb[colKey]);
+    const va = colKey === "valor" ? pa[colKey] : colKey === "data" ? parseDateSort(pa[colKey]) : String(pa[colKey]);
+    const vb = colKey === "valor" ? pb[colKey] : colKey === "data" ? parseDateSort(pb[colKey]) : String(pb[colKey]);
     const cmp = typeof va === "number" ? va - vb : va.localeCompare(vb, "pt-BR", { sensitivity: "base" });
     return dir === "asc" ? cmp : -cmp;
   });
