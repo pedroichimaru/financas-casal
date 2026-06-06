@@ -162,8 +162,8 @@ function renderHistoricoChart(historico) {
     return `${name.slice(0, 3)}/${year.slice(2)}`;
   });
 
-  const mkDs = (label, data, color, fill = false, bgColor = "transparent") => ({
-    label, data,
+  const mkDs = (label, data, color, fill = false, bgColor = "transparent", order = 0) => ({
+    label, data, order,
     borderColor: color,
     backgroundColor: bgColor,
     pointBackgroundColor: color,
@@ -250,9 +250,9 @@ function renderHistoricoChart(historico) {
     data: {
       labels,
       datasets: [
-        mkDs("Total Geral", historico.map(h => h.total),  "#0F172A",           true, "rgba(0,0,0,0.22)"),
-        mkDs("Pedro",       historico.map(h => h.pedro),  "#16A34A"),
-        mkDs("Marina",      historico.map(h => h.marina), "#DB2777"),
+        mkDs("Total Geral", historico.map(h => h.total),  "#0F172A",  true, "rgba(0,0,0,0.22)", 0),
+        mkDs("Pedro",       historico.map(h => h.pedro),  "#16A34A", false, "transparent",      1),
+        mkDs("Marina",      historico.map(h => h.marina), "#DB2777", false, "transparent",      2),
       ],
     },
     options: {
