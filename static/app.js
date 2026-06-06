@@ -27,7 +27,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
 if (typeof ChartDataLabels !== "undefined") Chart.register(ChartDataLabels);
 let _historicoChart   = null;
 let _historicoAllData = [];
-let _periodMeses      = 12; // padrão: 1 ano
+let _periodMeses      = 36; // padrão: 3 anos
 
 // Seletor de período do gráfico
 document.querySelectorAll(".periodo-btn").forEach(btn => {
@@ -162,21 +162,38 @@ function renderHistoricoChart(historico) {
     return `${name.slice(0, 3)}/${year.slice(2)}`;
   });
 
-  const mkDs = (label, data, color) => ({
+  const mkDs = (label, data, color, fill = false, bgColor = "transparent") => ({
     label, data,
     borderColor: color,
-    backgroundColor: "transparent",
+    backgroundColor: bgColor,
     pointBackgroundColor: color,
     pointBorderColor: color,
-    borderWidth: 2, tension: 0.3,
-    pointRadius: 0, pointHoverRadius: 0,
-    fill: false,
+    borderWidth: fill ? 0 : 2, tension: 0,
+    pointRadius: fill ? 0 : 2.5, pointHoverRadius: fill ? 0 : 3.5,
+    fill,
     datalabels: { display: false },
   });
 
-  // Plugin: grid de janeiro + crosshair com donut
+  // Plugin: grid de janeiro + crosshair com donut + dropshadow no tooltip
   const overlayPlugin = {
     id: "historicoOverlay",
+    beforeDraw(chart) {
+      const ctx = chart.ctx;
+      const tooltip = chart.tooltip;
+      if (!tooltip?._active?.length) return;
+      const { x, y, width, height } = tooltip;
+      if (!width || !height) return;
+      ctx.save();
+      ctx.shadowColor   = "rgba(0,0,0,0.15)";
+      ctx.shadowBlur    = 12;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 4;
+      ctx.fillStyle = "rgba(255,255,255,0.82)";
+      ctx.beginPath();
+      ctx.roundRect(x, y, width, height, 6);
+      ctx.fill();
+      ctx.restore();
+    },
     afterDraw(chart) {
       const ctx  = chart.ctx;
       const yAxis = chart.scales.y;
@@ -233,7 +250,7 @@ function renderHistoricoChart(historico) {
     data: {
       labels,
       datasets: [
-        mkDs("Total Geral", historico.map(h => h.total),  "#0F172A"),
+        mkDs("Total Geral", historico.map(h => h.total),  "#0F172A",           true, "rgba(0,0,0,0.22)"),
         mkDs("Pedro",       historico.map(h => h.pedro),  "#16A34A"),
         mkDs("Marina",      historico.map(h => h.marina), "#DB2777"),
       ],
@@ -250,9 +267,18 @@ function renderHistoricoChart(historico) {
           titleFont: { ...font, size: 12, weight: "600" },
           bodyFont:  { ...font, size: 12 },
           padding: 10,
+          backgroundColor: "rgba(255,255,255,0.82)",
+          titleColor: "#111",
+          bodyColor:  "#333",
+          borderColor: "rgba(0,0,0,0.08)",
+          borderWidth: 1,
           callbacks: {
             title: (items) => items[0]?.label || "",
-            label: (ctx) => `  ${ctx.dataset.label}: ${formatBRL(ctx.parsed.y)}`,
+            label: (ctx) => {
+              const v = ctx.parsed.y;
+              const k = Math.round(v / 1000);
+              return `  ${ctx.dataset.label}: ${k}k`;
+            },
           },
         },
         datalabels: { display: false },
