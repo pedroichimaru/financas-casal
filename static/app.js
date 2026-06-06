@@ -151,8 +151,8 @@ function renderHistoricoChart(historico) {
     backgroundColor: "transparent",
     pointBackgroundColor: color,
     pointBorderColor: color,
-    tension: 0.3, pointRadius: 5, pointHoverRadius: 7, fill: false,
-    datalabels: { align: dlAlign, anchor: "center", offset: 12 },
+    borderWidth: 1.5, tension: 0.3, pointRadius: 3, pointHoverRadius: 5, fill: false,
+    datalabels: { display: false },
   });
 
   _historicoChart = new Chart(canvas, {

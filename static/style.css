@@ -1355,7 +1355,7 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 .inicio-sal-cards .summary-card { flex: 1; min-width: 130px; }
 
 .inicio-chart-card { padding: 22px 24px; margin-bottom: 24px; }
-.inicio-chart-wrap { position: relative; height: 320px; margin-top: 12px; }
+.inicio-chart-wrap { position: relative; height: 560px; margin-top: 12px; }
 
 /* ===== MES NAV (FECHAMENTO) ===== */
 .mes-nav {
