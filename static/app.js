@@ -27,7 +27,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
 if (typeof ChartDataLabels !== "undefined") Chart.register(ChartDataLabels);
 let _historicoChart   = null;
 let _historicoAllData = [];
-let _periodMeses      = 0;  // 0 = histórico completo
+let _periodMeses      = 12; // padrão: 1 ano
 
 // Seletor de período do gráfico
 document.querySelectorAll(".periodo-btn").forEach(btn => {
