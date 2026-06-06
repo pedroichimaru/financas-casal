@@ -573,6 +573,9 @@ fechamentoSel.addEventListener("change", async () => {
     const data = await expRes.json();
     _currentProp       = propRes.ok ? await propRes.json() : null;
     _currentPagamentos = pagRes.ok  ? await pagRes.json()  : [];
+    // Ordem padrão: mais antigo → mais recente
+    _currentPagamentos.sort((a, b) => parseDateSort(a.data).localeCompare(parseDateSort(b.data)));
+    _pagSortState = { col: "data", dir: "asc" };
     fechamentoLoading.hidden = true;
     if (!data.expenses || data.expenses.length === 0) {
       fechamentoEmpty.textContent = "Nenhuma despesa encontrada para este mês.";
