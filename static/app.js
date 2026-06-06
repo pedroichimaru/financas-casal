@@ -162,21 +162,36 @@ function renderHistoricoChart(historico) {
     return `${name.slice(0, 3)}/${year.slice(2)}`;
   });
 
-  const mkDs = (label, data, color, fill = false, bgColor = "transparent", order = 0) => ({
-    label, data, order,
+  const mkDs = (label, data, color) => ({
+    label, data,
     borderColor: color,
-    backgroundColor: bgColor,
+    backgroundColor: "transparent",
     pointBackgroundColor: color,
     pointBorderColor: color,
-    borderWidth: fill ? 0 : 2, tension: 0,
-    pointRadius: fill ? 0 : 2.5, pointHoverRadius: fill ? 0 : 3.5,
-    fill,
+    borderWidth: 2, tension: 0,
+    pointRadius: 2.5, pointHoverRadius: 3.5,
+    fill: false,
     datalabels: { display: false },
   });
 
-  // Plugin: grid de janeiro + crosshair com donut + dropshadow no tooltip
+  // Plugin: área Total Geral + grid janeiro + crosshair com donut + dropshadow no tooltip
   const overlayPlugin = {
     id: "historicoOverlay",
+    beforeDatasetsDraw(chart) {
+      const meta = chart.getDatasetMeta(0);
+      if (!meta?.data?.length) return;
+      const ctx   = chart.ctx;
+      const yAxis = chart.scales.y;
+      ctx.save();
+      ctx.beginPath();
+      meta.data.forEach((pt, i) => i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
+      ctx.lineTo(meta.data[meta.data.length - 1].x, yAxis.bottom);
+      ctx.lineTo(meta.data[0].x, yAxis.bottom);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.fill();
+      ctx.restore();
+    },
     beforeDraw(chart) {
       const ctx = chart.ctx;
       const tooltip = chart.tooltip;
@@ -254,9 +269,9 @@ function renderHistoricoChart(historico) {
     data: {
       labels,
       datasets: [
-        mkDs("Total Geral", historico.map(h => h.total),  "#0F172A",  true, "rgba(0,0,0,0.22)", 0),
-        mkDs("Pedro",       historico.map(h => h.pedro),  "#16A34A", false, "transparent",      1),
-        mkDs("Marina",      historico.map(h => h.marina), "#DB2777", false, "transparent",      2),
+        { ...mkDs("Total Geral", historico.map(h => h.total), "#0F172A"), borderWidth: 0, pointRadius: 0, pointHoverRadius: 0 },
+        mkDs("Pedro",  historico.map(h => h.pedro),  "#16A34A"),
+        mkDs("Marina", historico.map(h => h.marina), "#DB2777"),
       ],
     },
     options: {
