@@ -10,7 +10,7 @@ from classifier import classify
 from database import (
     add_pagamento, delete_expense, delete_mes,
     delete_pagamento, delete_pagamentos_by_mes, delete_salario,
-    get_conn, get_expenses_by_mes, get_meses, get_pagamentos, get_proporcao_for_mes,
+    get_expenses_by_mes, get_meses, get_pagamentos, get_proporcao_for_mes,
     get_salarios, init_db, save_expenses,
     update_apropriacao, update_pagamento, upsert_salario,
 )
@@ -197,34 +197,6 @@ def remove_pagamento(pag_id: int):
 def remove_pagamentos_mes(mes: str):
     delete_pagamentos_by_mes(mes)
     return {"deleted_mes": mes}
-
-
-# ---------- Import Histórico (temporário) ----------
-
-class HistoricoItem(BaseModel):
-    mes: str
-    pedro: float
-    marina: float
-    data_primeiro: str
-    data_ultimo: str
-
-
-@app.post("/import-historico")
-def import_historico(items: list[HistoricoItem]):
-    with get_conn() as conn:
-        for item in items:
-            conn.execute("DELETE FROM pagamentos WHERE mes = ?", (item.mes,))
-        conn.commit()
-    for item in items:
-        save_expenses(item.mes, [
-            {"data": item.data_primeiro, "despesa": "Total Pedro",  "valor": item.pedro,
-             "id": "Manual", "portador": "PEDRO ICHIMARU BEDENDO", "apropriacao": "Pedro"},
-            {"data": item.data_primeiro, "despesa": "Total Marina", "valor": item.marina,
-             "id": "Manual", "portador": "MARINA JACOB DAUR",      "apropriacao": "Marina"},
-        ])
-        add_pagamento(item.mes, item.data_ultimo,
-                      "Balanço Antigo já fechado", item.marina, "Pedro")
-    return {"imported": len(items)}
 
 
 # ---------- Dashboard ----------
