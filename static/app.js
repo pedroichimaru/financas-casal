@@ -400,7 +400,10 @@ dropZone.addEventListener("drop", (e) => {
   const file = e.dataTransfer.files[0];
   if (file) handleFile(file);
 });
-dropZone.addEventListener("click", () => fileInput.click());
+dropZone.addEventListener("click", (e) => {
+  if (e.target !== fileInput) fileInput.click();
+});
+fileInput.addEventListener("click", (e) => e.stopPropagation());
 fileInput.addEventListener("change", () => {
   if (fileInput.files[0]) handleFile(fileInput.files[0]);
 });
@@ -495,6 +498,8 @@ async function saveImport() {
     importSuccess.textContent = `${data.saved} despesas salvas para ${data.mes}.`;
     importSuccess.hidden = false;
     btnImport.textContent = "Importado ✓";
+    loadDashboard();
+    _mesesLoaded = false;
   } catch {
     showError("Erro de conexão ao salvar.");
     btnImport.disabled = false;
