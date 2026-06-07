@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from classifier import classify
 from database import (
-    add_pagamento, delete_expense, delete_mes,
+    add_pagamento, build_classification_lookup, delete_expense, delete_mes,
     delete_pagamento, delete_pagamentos_by_mes, delete_salario,
     get_expenses_by_mes, get_meses, get_pagamentos, get_proporcao_for_mes,
     get_salarios, init_db, save_expenses,
@@ -47,6 +47,10 @@ async def upload(file: UploadFile = File(...), mes: str = Form(...)):
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
+    lookup = build_classification_lookup()
+    for e in expenses:
+        e["apropriacao"] = classify(e["despesa"], e["id"], e["portador"], lookup)
+
     total = round(sum(e["valor"] for e in expenses), 2)
     return {"expenses": expenses, "total": total, "count": len(expenses), "mes": mes}
 
@@ -66,6 +70,7 @@ class ImportRequest(BaseModel):
 
 @app.post("/import")
 def import_expenses(body: ImportRequest):
+    lookup = build_classification_lookup()
     classified = [
         {
             "data": e.data,
@@ -73,7 +78,7 @@ def import_expenses(body: ImportRequest):
             "valor": e.valor,
             "id": e.id,
             "portador": e.portador,
-            "apropriacao": classify(e.despesa, e.id, e.portador),
+            "apropriacao": classify(e.despesa, e.id, e.portador, lookup),
         }
         for e in body.expenses
     ]

@@ -23,25 +23,33 @@ def _detect_person(portador: str, id_origem: str) -> str:
     return "50/50"
 
 
-def classify(despesa: str, id_origem: str, portador: str) -> str:
+def classify(despesa: str, id_origem: str, portador: str, lookup: dict | None = None) -> str:
+    # 1. Lookup histórico: mesma combinação (despesa, id, portador) com ≥75% de frequência
+    if lookup is not None:
+        key = (
+            (despesa   or "").strip().lower(),
+            (id_origem or "").strip().lower(),
+            (portador  or "").strip().lower(),
+        )
+        counts = lookup.get(key)
+        if counts:
+            dominant = max(counts, key=counts.get)
+            if counts[dominant] / sum(counts.values()) >= 0.75:
+                return dominant
+
+    # 2. Regras estáticas
     combined = f"{portador} {id_origem}".lower()
 
-    # Extrato / conta corrente → Casa
     if re.search(r"extrato|conta\s*corrente|\bcc\b", combined):
         return "Casa"
-
-    # Santander Mastercard → Casa
     if "santander" in combined and re.search(r"master", combined):
         return "Casa"
-
-    # Santander Visa → individual pelo portador
     if "santander" in combined and "visa" in combined:
         return _detect_person(portador, id_origem)
-
-    # Itaú Latam → individual, exceto despesas Casa
     if re.search(r"ita[uú]|latam", combined):
         if _is_casa_expense(despesa):
             return "Casa"
         return _detect_person(portador, id_origem)
 
-    return "50/50"
+    # 3. Fallback: portador identificado → usa o portador; senão 50/50
+    return _detect_person(portador, id_origem)

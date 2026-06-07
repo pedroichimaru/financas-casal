@@ -93,6 +93,25 @@ def get_meses() -> list[str]:
         return [r["mes"] for r in rows]
 
 
+def build_classification_lookup() -> dict:
+    """Retorna {(despesa, id_origem, portador): {apropriacao: count}} do histórico."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            """SELECT despesa, id_origem, portador, apropriacao, COUNT(*) AS freq
+               FROM despesas
+               GROUP BY despesa, id_origem, portador, apropriacao"""
+        ).fetchall()
+    lookup: dict = {}
+    for row in rows:
+        key = (
+            (row["despesa"]   or "").strip().lower(),
+            (row["id_origem"] or "").strip().lower(),
+            (row["portador"]  or "").strip().lower(),
+        )
+        lookup.setdefault(key, {})[row["apropriacao"]] = row["freq"]
+    return lookup
+
+
 def get_expenses_by_mes(mes: str) -> list[dict]:
     with get_conn() as conn:
         rows = conn.execute(
