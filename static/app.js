@@ -162,13 +162,30 @@ function renderHistoricoChart(historico) {
     return `${name.slice(0, 3)}/${year.slice(2)}`;
   });
 
+  // Desenha polyline com vértices arredondados (quadratic bezier nos cantos)
+  function drawRoundedPath(ctx, pts, r) {
+    if (!pts.length) return;
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length - 1; i++) {
+      const a = pts[i - 1], b = pts[i], c = pts[i + 1];
+      const ab = Math.hypot(b.x - a.x, b.y - a.y);
+      const bc = Math.hypot(c.x - b.x, c.y - b.y);
+      const rr = Math.min(r, ab / 2, bc / 2);
+      const p1 = { x: b.x - (b.x - a.x) / ab * rr, y: b.y - (b.y - a.y) / ab * rr };
+      const p2 = { x: b.x + (c.x - b.x) / bc * rr, y: b.y + (c.y - b.y) / bc * rr };
+      ctx.lineTo(p1.x, p1.y);
+      ctx.quadraticCurveTo(b.x, b.y, p2.x, p2.y);
+    }
+    ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+  }
+
   const mkDs = (label, data, color) => ({
     label, data,
     borderColor: color,
     backgroundColor: "transparent",
     pointBackgroundColor: color,
     pointBorderColor: color,
-    borderWidth: 2, tension: 0,
+    borderWidth: 0, tension: 0,
     pointRadius: 0, pointHoverRadius: 0,
     fill: false,
     datalabels: { display: false },
@@ -178,19 +195,38 @@ function renderHistoricoChart(historico) {
   const overlayPlugin = {
     id: "historicoOverlay",
     beforeDatasetsDraw(chart) {
-      const meta = chart.getDatasetMeta(0);
-      if (!meta?.data?.length) return;
       const ctx   = chart.ctx;
       const yAxis = chart.scales.y;
+      const meta0 = chart.getDatasetMeta(0);
+      if (!meta0?.data?.length) return;
+      const R   = 6;
+      const pts0 = meta0.data.map(pt => ({ x: pt.x, y: pt.y }));
+
+      // Área Total Geral com vértices arredondados
       ctx.save();
       ctx.beginPath();
-      meta.data.forEach((pt, i) => i === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
-      ctx.lineTo(meta.data[meta.data.length - 1].x, yAxis.bottom);
-      ctx.lineTo(meta.data[0].x, yAxis.bottom);
+      drawRoundedPath(ctx, pts0, R);
+      ctx.lineTo(pts0[pts0.length - 1].x, yAxis.bottom);
+      ctx.lineTo(pts0[0].x, yAxis.bottom);
       ctx.closePath();
       ctx.fillStyle = "rgba(0,0,0,0.12)";
       ctx.fill();
       ctx.restore();
+
+      // Linhas Pedro e Marina com vértices arredondados
+      [1, 2].forEach(idx => {
+        const meta = chart.getDatasetMeta(idx);
+        if (!meta?.data?.length) return;
+        const pts = meta.data.map(pt => ({ x: pt.x, y: pt.y }));
+        ctx.save();
+        ctx.strokeStyle = chart.data.datasets[idx].borderColor;
+        ctx.lineWidth   = 2;
+        ctx.lineCap     = "round";
+        ctx.beginPath();
+        drawRoundedPath(ctx, pts, R);
+        ctx.stroke();
+        ctx.restore();
+      });
     },
     beforeDraw(chart) {
       const ctx = chart.ctx;
@@ -269,9 +305,9 @@ function renderHistoricoChart(historico) {
     data: {
       labels,
       datasets: [
-        { ...mkDs("Total Geral", historico.map(h => h.total), "#0F172A"), borderWidth: 0, pointRadius: 0, pointHoverRadius: 0 },
-        mkDs("Pedro",  historico.map(h => h.pedro),  "#16A34A"),
-        mkDs("Marina", historico.map(h => h.marina), "#DB2777"),
+        mkDs("Total Geral", historico.map(h => h.total), "#0F172A"),
+        mkDs("Pedro",       historico.map(h => h.pedro),  "#16A34A"),
+        mkDs("Marina",      historico.map(h => h.marina), "#DB2777"),
       ],
     },
     options: {
