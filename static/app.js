@@ -169,7 +169,7 @@ function renderHistoricoChart(historico) {
     pointBackgroundColor: color,
     pointBorderColor: color,
     borderWidth: 2, tension: 0,
-    pointRadius: 2.5, pointHoverRadius: 3.5,
+    pointRadius: 0, pointHoverRadius: 0,
     fill: false,
     datalabels: { display: false },
   });
