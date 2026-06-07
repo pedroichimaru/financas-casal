@@ -401,9 +401,9 @@ dropZone.addEventListener("drop", (e) => {
   if (file) handleFile(file);
 });
 dropZone.addEventListener("click", (e) => {
-  if (e.target !== fileInput) fileInput.click();
+  if (e.target === fileInput || e.target.closest("label")) return;
+  fileInput.click();
 });
-fileInput.addEventListener("click", (e) => e.stopPropagation());
 fileInput.addEventListener("change", () => {
   if (fileInput.files[0]) handleFile(fileInput.files[0]);
 });
