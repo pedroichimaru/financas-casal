@@ -188,7 +188,7 @@ function renderHistoricoChart(historico) {
       ctx.lineTo(meta.data[meta.data.length - 1].x, yAxis.bottom);
       ctx.lineTo(meta.data[0].x, yAxis.bottom);
       ctx.closePath();
-      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
       ctx.fill();
       ctx.restore();
     },
