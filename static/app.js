@@ -15,6 +15,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
     document.getElementById("section-salarios").hidden   = section !== "salarios";
     closeFilterPanel();
     closeApropDropdown();
+    closeCategDropdown();
     closeMesDropdown();
     if (section === "inicio")     initInicio();
     if (section === "fechamento") initFechamento();
@@ -568,10 +569,14 @@ const FILTER_COLS = {
     thId: "th-aprop-filter-btn",
     getValue: (tr) => tr.querySelectorAll("td")[5]?.querySelector(".aprop-btn")?.dataset.aprop ?? "",
   },
+  categoria: {
+    thId: "th-categ-filter-btn",
+    getValue: (tr) => tr.querySelectorAll("td")[6]?.querySelector(".categ-btn")?.dataset.categ ?? "",
+  },
 };
 
-const _filters      = { id: new Set(), portador: new Set(), apropriacao: new Set() };
-const _filterValues = { id: [],        portador: [],        apropriacao: [] };
+const _filters      = { id: new Set(), portador: new Set(), apropriacao: new Set(), categoria: new Set() };
+const _filterValues = { id: [],        portador: [],        apropriacao: [],         categoria: [] };
 
 const SORT_COLS = [
   { key: "data",    thId: "th-sort-data" },
@@ -580,9 +585,26 @@ const SORT_COLS = [
   { key: "id",          thId: "th-sort-id" },
   { key: "portador",    thId: "th-sort-portador" },
   { key: "apropriacao", thId: "th-sort-aprop" },
+  { key: "categoria",   thId: "th-sort-categ" },
 ];
 
 let _sortState         = { col: null, dir: "asc" };
+
+const CATEG_CLASSES = {
+  "Casa":                      "casa",
+  "Conteúdo/Apps":             "conteudo",
+  "Mercado":                   "mercado",
+  "Restaurante/Delivery":      "restaurante",
+  "Saúde/Corrida":             "saude",
+  "Taxa/Burocracia":           "taxa",
+  "Transporte/Uber":           "transporte",
+  "Viagem/Presente":           "viagem",
+  "Movimentação/Investimento": "investimento",
+  "Falta classificar":         "falta",
+};
+const VALID_CATEGORIAS = Object.keys(CATEG_CLASSES);
+function categClass(categ) { return CATEG_CLASSES[categ] || "falta"; }
+
 let _currentProp       = null;
 let _currentPagamentos = [];
 let _totalMarina       = 0;
@@ -594,9 +616,11 @@ const PAG_SORT_COLS = [
 ];
 let _pagSortState  = { col: null, dir: "asc" };
 let _editingPagId  = null;
+let _categDropdown = null;
 
 // Persistent delegated listeners (registered once)
 fechamentoBody.addEventListener("click", onApropBtnClick);
+fechamentoBody.addEventListener("click", onCategBtnClick);
 fechamentoBody.addEventListener("click", onDelRowBtnClick);
 Object.entries(FILTER_COLS).forEach(([colKey, cfg]) => {
   document.getElementById(cfg.thId).addEventListener("click", (e) => {
@@ -718,6 +742,7 @@ fechamentoSel.addEventListener("change", async () => {
   fechamentoEmpty.hidden = true;
   closeFilterPanel();
   closeApropDropdown();
+  closeCategDropdown();
   Object.keys(_filters).forEach(k => { _filters[k] = new Set(); });
   updateFilterIndicators();
   _currentProp = null;
@@ -776,6 +801,7 @@ function renderFechamento({ expenses }) {
   _filterValues.id          = [...new Set(ordered.map(e => (e.id_origem || "").trim()))].sort();
   _filterValues.portador    = [...new Set(ordered.map(e => (e.portador  || "").trim()))].sort();
   _filterValues.apropriacao = ["Pedro", "Marina", "Casa", "50/50"].filter(v => ordered.some(e => e.apropriacao === v));
+  _filterValues.categoria   = VALID_CATEGORIAS.filter(v => ordered.some(e => (e.categoria || "Falta classificar") === v));
   Object.keys(_filters).forEach(k => { _filters[k] = new Set(); });
   updateFilterIndicators();
   _sortState = { col: null, dir: "asc" };
@@ -791,6 +817,7 @@ function renderFechamento({ expenses }) {
     const tr = document.createElement("tr");
     tr.className = rowClass(e.apropriacao);
     tr.dataset.rowid = e.id;
+    const eCateg = e.categoria || "Falta classificar";
     tr.innerHTML = `
       <td>${e.data}</td>
       <td>${e.despesa}</td>
@@ -798,6 +825,7 @@ function renderFechamento({ expenses }) {
       <td>${e.id_origem}</td>
       <td>${e.portador}</td>
       <td><button class="aprop-btn" data-rowid="${e.id}" data-aprop="${e.apropriacao}"><span class="aprop-btn-label">${e.apropriacao}</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button></td>
+      <td><button class="categ-btn categ-btn--${categClass(eCateg)}" data-rowid="${e.id}" data-categ="${eCateg}" title="${eCateg}"><span class="categ-btn-label">${eCateg}</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button></td>
       <td class="col-del"><button class="del-row-btn" title="Excluir despesa"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></td>
     `;
     fechamentoBody.appendChild(tr);
@@ -945,6 +973,7 @@ function getSortValue(tr, colKey) {
     case "id":          return exp.id_origem  ?? "";
     case "portador":    return exp.portador   ?? "";
     case "apropriacao": return exp.apropriacao ?? "";
+    case "categoria":   return exp.categoria   ?? "Falta classificar";
     default:            return "";
   }
 }
@@ -1073,6 +1102,7 @@ function onApropBtnClick(e) {
     return;
   }
   closeApropDropdown();
+  closeCategDropdown();
   openApropDropdown(btn);
 }
 
@@ -1128,6 +1158,99 @@ function onOutsideAprop(e) {
   if (_apropDropdown && !_apropDropdown.contains(e.target) && !e.target.closest(".aprop-btn")) {
     closeApropDropdown();
   }
+}
+
+// ===== CATEG RECLASSIFY =====
+
+function onCategBtnClick(e) {
+  const btn = e.target.closest(".categ-btn");
+  if (!btn) return;
+  e.stopPropagation();
+  if (_categDropdown && _categDropdown.dataset.rowid === btn.dataset.rowid) {
+    closeCategDropdown();
+    return;
+  }
+  closeCategDropdown();
+  closeApropDropdown();
+  openCategDropdown(btn);
+}
+
+function openCategDropdown(btn) {
+  const rect        = btn.getBoundingClientRect();
+  const currentCateg = btn.dataset.categ;
+
+  const dropdown = document.createElement("div");
+  dropdown.className    = "categ-dropdown";
+  dropdown.dataset.rowid = btn.dataset.rowid;
+  dropdown.style.position = "fixed";
+
+  VALID_CATEGORIAS.forEach(cat => {
+    const opt = document.createElement("button");
+    opt.className = `categ-option${cat === currentCateg ? " categ-option--active" : ""}`;
+    const dot = document.createElement("span");
+    dot.className = `categ-option-dot categ-option-dot--${categClass(cat)}`;
+    opt.appendChild(dot);
+    opt.appendChild(document.createTextNode(cat));
+    opt.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      applyRecategory(btn, cat);
+      closeCategDropdown();
+    });
+    dropdown.appendChild(opt);
+  });
+
+  document.body.appendChild(dropdown);
+
+  const dropH = VALID_CATEGORIAS.length * 34 + 10;
+  let top = rect.bottom + 4;
+  if (top + dropH > window.innerHeight) top = rect.top - dropH - 4;
+  dropdown.style.top  = top + "px";
+  dropdown.style.left = rect.left + "px";
+
+  _categDropdown = dropdown;
+  setTimeout(() => document.addEventListener("click", onOutsideCateg, true), 0);
+}
+
+function closeCategDropdown() {
+  if (!_categDropdown) return;
+  _categDropdown.remove();
+  _categDropdown = null;
+  document.removeEventListener("click", onOutsideCateg, true);
+}
+
+function onOutsideCateg(e) {
+  if (_categDropdown && !_categDropdown.contains(e.target) && !e.target.closest(".categ-btn")) {
+    closeCategDropdown();
+  }
+}
+
+async function applyRecategory(btn, newCateg) {
+  const rowId = btn.dataset.rowid;
+  const oldCateg = btn.dataset.categ;
+  if (oldCateg === newCateg) return;
+
+  updateRowCateg(btn, newCateg);
+
+  try {
+    const res = await fetch(`/expenses/${rowId}/categoria`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categoria: newCateg }),
+    });
+    if (!res.ok) { updateRowCateg(btn, oldCateg); return; }
+    const exp = _currentExpenses.find(e => String(e.id) === String(rowId));
+    if (exp) exp.categoria = newCateg;
+    applyFilters();
+  } catch {
+    updateRowCateg(btn, oldCateg);
+  }
+}
+
+function updateRowCateg(btn, categ) {
+  btn.dataset.categ = categ;
+  btn.title = categ;
+  btn.className = `categ-btn categ-btn--${categClass(categ)}`;
+  btn.querySelector(".categ-btn-label").textContent = categ;
 }
 
 async function applyReclassify(btn, newAprop) {

@@ -56,6 +56,10 @@ def init_db():
             conn.execute("ALTER TABLE pagamentos ADD COLUMN apropriacao TEXT NOT NULL DEFAULT 'Pedro'")
         except Exception:
             pass
+        try:
+            conn.execute("ALTER TABLE despesas ADD COLUMN categoria TEXT")
+        except Exception:
+            pass
         conn.execute("""
             CREATE TABLE IF NOT EXISTS salarios (
                 id        INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,11 +78,11 @@ def save_expenses(mes: str, expenses: list[dict]):
         conn.execute("DELETE FROM despesas WHERE mes = ?", (mes,))
         conn.executemany(
             """INSERT INTO despesas
-               (mes, mes_ordem, data, despesa, valor, id_origem, portador, apropriacao)
-               VALUES (?,?,?,?,?,?,?,?)""",
+               (mes, mes_ordem, data, despesa, valor, id_origem, portador, apropriacao, categoria)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
             [
                 (mes, ordem, e["data"], e["despesa"], e["valor"],
-                 e["id"], e["portador"], e["apropriacao"])
+                 e["id"], e["portador"], e["apropriacao"], e.get("categoria"))
                 for e in expenses
             ],
         )
@@ -115,11 +119,40 @@ def build_classification_lookup() -> dict:
 def get_expenses_by_mes(mes: str) -> list[dict]:
     with get_conn() as conn:
         rows = conn.execute(
-            """SELECT id, data, despesa, valor, id_origem, portador, apropriacao
+            """SELECT id, data, despesa, valor, id_origem, portador, apropriacao, categoria
                FROM despesas WHERE mes = ? ORDER BY rowid""",
             (mes,),
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+def build_categoria_lookup() -> dict:
+    """Returns {(despesa, id_origem, portador): {categoria: count}} from history."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            """SELECT despesa, id_origem, portador, categoria, COUNT(*) AS freq
+               FROM despesas
+               WHERE categoria IS NOT NULL
+               GROUP BY despesa, id_origem, portador, categoria"""
+        ).fetchall()
+    lookup: dict = {}
+    for row in rows:
+        key = (
+            (row["despesa"]   or "").strip().lower(),
+            (row["id_origem"] or "").strip().lower(),
+            (row["portador"]  or "").strip().lower(),
+        )
+        lookup.setdefault(key, {})[row["categoria"]] = row["freq"]
+    return lookup
+
+
+def update_categoria(expense_id: int, categoria: str):
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE despesas SET categoria = ? WHERE id = ?",
+            (categoria, expense_id),
+        )
+        conn.commit()
 
 
 def update_apropriacao(expense_id: int, apropriacao: str):
