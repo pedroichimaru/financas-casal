@@ -989,7 +989,7 @@ function renderCategChart() {
       else if (aprop === "Casa")  valor = e.valor * pMarina;
       else if (aprop === "50/50") valor = e.valor * 0.5;
     }
-    if (valor > 0) totals[cat] = (totals[cat] || 0) + valor;
+    if (valor !== 0) totals[cat] = (totals[cat] || 0) + valor;
   });
 
   const sorted = Object.entries(totals)
