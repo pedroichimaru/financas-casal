@@ -1614,7 +1614,31 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 
 /* ===== CATEGORY CHART ===== */
 .categ-chart-card { padding: 16px 24px 18px; margin-top: 20px; margin-bottom: 24px; }
-.categ-chart-label { margin-bottom: 10px; }
+.categ-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.categ-chart-label { margin-bottom: 0; }
+.categ-chart-view-btns {
+  display: flex;
+  gap: 4px;
+}
+.categ-view-btn {
+  font-family: inherit;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.categ-view-btn:hover { background: var(--surface-2); color: var(--text); }
+.categ-view-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 .categ-chart-wrap  { position: relative; overflow: visible; }
 
 /* ===== REDUCED MOTION ===== */

@@ -629,8 +629,9 @@ const PAG_SORT_COLS = [
 ];
 let _pagSortState  = { col: null, dir: "asc" };
 let _editingPagId  = null;
-let _categDropdown = null;
-let _categChart    = null;
+let _categDropdown  = null;
+let _categChart     = null;
+let _categChartView = "total"; // "total" | "pedro" | "marina"
 
 // Persistent delegated listeners (registered once)
 fechamentoBody.addEventListener("click", onApropBtnClick);
@@ -675,6 +676,14 @@ document.getElementById("edit-pag-data").addEventListener("input", function () {
 
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && _editingPagId) exitEditMode();
+});
+
+document.getElementById("categ-chart-card").addEventListener("click", (e) => {
+  const btn = e.target.closest(".categ-view-btn");
+  if (!btn) return;
+  _categChartView = btn.dataset.view;
+  document.querySelectorAll(".categ-view-btn").forEach(b => b.classList.toggle("active", b === btn));
+  renderCategChart();
 });
 
 async function initFechamento() {
@@ -847,6 +856,10 @@ function renderFechamento({ expenses }) {
 
   renderSummaryCards();
   renderIdTotals();
+  _categChartView = "total";
+  document.querySelectorAll(".categ-view-btn").forEach(b =>
+    b.classList.toggle("active", b.dataset.view === "total")
+  );
   renderCategChart();
 }
 
@@ -955,10 +968,28 @@ function renderCategChart() {
   const card   = document.getElementById("categ-chart-card");
   if (!canvas || typeof Chart === "undefined") return;
 
+  const prop    = _currentProp;
+  const hasProp = prop?.found && prop.window_size > 0;
+  const pPedro  = hasProp ? prop.pct_pedro  / 100 : 0.5;
+  const pMarina = hasProp ? prop.pct_marina / 100 : 0.5;
+
   const totals = {};
   _currentExpenses.forEach(e => {
-    const cat = e.categoria || "Falta classificar";
-    totals[cat] = (totals[cat] || 0) + e.valor;
+    const cat   = e.categoria || "Falta classificar";
+    const aprop = e.apropriacao || "50/50";
+    let valor = 0;
+    if (_categChartView === "total") {
+      valor = e.valor;
+    } else if (_categChartView === "pedro") {
+      if (aprop === "Pedro")  valor = e.valor;
+      else if (aprop === "Casa")  valor = e.valor * pPedro;
+      else if (aprop === "50/50") valor = e.valor * 0.5;
+    } else {
+      if (aprop === "Marina") valor = e.valor;
+      else if (aprop === "Casa")  valor = e.valor * pMarina;
+      else if (aprop === "50/50") valor = e.valor * 0.5;
+    }
+    if (valor > 0) totals[cat] = (totals[cat] || 0) + valor;
   });
 
   const sorted = Object.entries(totals)

@@ -339,7 +339,14 @@
         <div id="fechamento-summary" class="summary-cards"></div>
         <div id="id-totals-strip" class="id-totals-strip"></div>
         <div id="categ-chart-card" class="card categ-chart-card" hidden>
-          <div class="categ-chart-label inicio-box-label">Totais por Categoria</div>
+          <div class="categ-chart-header">
+            <div class="categ-chart-label inicio-box-label">Totais por Categoria</div>
+            <div class="categ-chart-view-btns">
+              <button class="categ-view-btn active" data-view="total">Total</button>
+              <button class="categ-view-btn" data-view="pedro">Pedro</button>
+              <button class="categ-view-btn" data-view="marina">Marina</button>
+            </div>
+          </div>
           <div class="categ-chart-wrap">
             <canvas id="categ-chart"></canvas>
           </div>
