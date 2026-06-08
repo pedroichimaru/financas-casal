@@ -394,7 +394,7 @@ tbody tr:last-child { border-bottom: none; }
 tbody td { padding: 9px 16px; }
 tbody tr:hover { filter: brightness(0.96); }
 
-#fechamento-table { font-size: 0.8125rem; }
+#fechamento-table { font-size: 0.75rem; }
 #fechamento-table thead th { padding: 9px 10px; }
 #fechamento-table tbody td { padding: 6px 10px; }
 #fechamento-table tfoot td { padding: 8px 10px; }
