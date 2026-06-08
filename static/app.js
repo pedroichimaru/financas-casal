@@ -591,16 +591,16 @@ const SORT_COLS = [
 let _sortState         = { col: null, dir: "asc" };
 
 const CATEG_COLORS = {
-  "Casa":                      "#3B82F6",
-  "Conteúdo/Apps":             "#8B5CF6",
-  "Mercado":                   "#22C55E",
-  "Restaurante/Delivery":      "#F97316",
-  "Saúde/Corrida":             "#16A34A",
-  "Taxa/Burocracia":           "#64748B",
-  "Transporte/Uber":           "#14B8A6",
-  "Viagem/Presente":           "#EF4444",
-  "Movimentação/Investimento": "#78716C",
-  "Falta classificar":         "#94A3B8",
+  "Casa":                      "#5080D5",
+  "Conteúdo/Apps":             "#9240C8",
+  "Mercado":                   "#67AA38",
+  "Restaurante/Delivery":      "#E88020",
+  "Saúde/Corrida":             "#A8D44A",
+  "Taxa/Burocracia":           "#587D90",
+  "Transporte/Uber":           "#18B0BC",
+  "Viagem/Presente":           "#C83535",
+  "Movimentação/Investimento": "#8B7A68",
+  "Falta classificar":         "#AFAFAF",
 };
 
 const CATEG_CLASSES = {
