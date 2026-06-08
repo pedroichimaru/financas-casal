@@ -1613,7 +1613,7 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 }
 
 /* ===== CATEGORY CHART ===== */
-.categ-chart-card { padding: 20px 24px 24px; margin-top: 20px; }
+.categ-chart-card { padding: 20px 24px 24px; margin-top: 20px; margin-bottom: 24px; }
 .categ-chart-label { margin-bottom: 14px; }
 .categ-chart-wrap  { position: relative; overflow: visible; }
 
