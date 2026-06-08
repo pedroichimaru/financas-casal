@@ -590,6 +590,19 @@ const SORT_COLS = [
 
 let _sortState         = { col: null, dir: "asc" };
 
+const CATEG_COLORS = {
+  "Casa":                      "#3B82F6",
+  "Conteúdo/Apps":             "#8B5CF6",
+  "Mercado":                   "#22C55E",
+  "Restaurante/Delivery":      "#F97316",
+  "Saúde/Corrida":             "#16A34A",
+  "Taxa/Burocracia":           "#64748B",
+  "Transporte/Uber":           "#14B8A6",
+  "Viagem/Presente":           "#EF4444",
+  "Movimentação/Investimento": "#78716C",
+  "Falta classificar":         "#94A3B8",
+};
+
 const CATEG_CLASSES = {
   "Casa":                      "casa",
   "Conteúdo/Apps":             "conteudo",
@@ -617,6 +630,7 @@ const PAG_SORT_COLS = [
 let _pagSortState  = { col: null, dir: "asc" };
 let _editingPagId  = null;
 let _categDropdown = null;
+let _categChart    = null;
 
 // Persistent delegated listeners (registered once)
 fechamentoBody.addEventListener("click", onApropBtnClick);
@@ -833,6 +847,7 @@ function renderFechamento({ expenses }) {
 
   renderSummaryCards();
   renderIdTotals();
+  renderCategChart();
 }
 
 function renderIdTotals() {
@@ -933,6 +948,93 @@ function renderSummaryCards() {
 
   _totalMarina = totalMarina;
   renderBalancoSaldo();
+}
+
+function renderCategChart() {
+  const canvas = document.getElementById("categ-chart");
+  const card   = document.getElementById("categ-chart-card");
+  if (!canvas || typeof Chart === "undefined") return;
+
+  const totals = {};
+  _currentExpenses.forEach(e => {
+    const cat = e.categoria || "Falta classificar";
+    totals[cat] = (totals[cat] || 0) + e.valor;
+  });
+
+  const sorted = Object.entries(totals)
+    .filter(([, v]) => v > 0)
+    .sort(([, a], [, b]) => b - a);
+
+  if (sorted.length === 0) { card.hidden = true; return; }
+  card.hidden = false;
+
+  if (_categChart) { _categChart.destroy(); _categChart = null; }
+
+  const labels = sorted.map(([cat]) => cat);
+  const values = sorted.map(([, v]) => v);
+  const colors = sorted.map(([cat]) => CATEG_COLORS[cat] || "#94A3B8");
+
+  const wrap = canvas.closest(".categ-chart-wrap");
+  if (wrap) wrap.style.height = (sorted.length * 44 + 48) + "px";
+
+  const font = { family: "'IBM Plex Sans', sans-serif" };
+
+  _categChart = new Chart(canvas, {
+    type: "bar",
+    plugins: [ChartDataLabels],
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors.map(c => c + "BF"),
+        borderColor: colors,
+        borderWidth: 0,
+        borderRadius: 4,
+        clip: false,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 250 },
+      layout: { padding: { right: 90 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+        datalabels: {
+          anchor: "end",
+          align: "end",
+          clamp: true,
+          formatter: v => {
+            const k = v / 1000;
+            return `R$ ${k.toFixed(k >= 10 ? 0 : 1).replace(".", ",")}k`;
+          },
+          font: { ...font, size: 11, weight: "600" },
+          color: "#475569",
+        },
+      },
+      scales: {
+        x: {
+          min: 0,
+          max: 30000,
+          ticks: {
+            callback: v => v === 0 ? "0" : `${v / 1000}k`,
+            font: { ...font, size: 10 },
+            color: "#94A3B8",
+            maxTicksLimit: 7,
+          },
+          grid: { color: "rgba(0,0,0,0.05)" },
+          border: { display: false },
+        },
+        y: {
+          ticks: { font: { ...font, size: 12 }, color: "#0F172A" },
+          grid: { display: false },
+          border: { display: false },
+        },
+      },
+    },
+  });
 }
 
 function buildSplitHtml({ items, note }) {
@@ -1246,6 +1348,7 @@ async function applyRecategory(btn, newCateg) {
       );
     }
     applyFilters();
+    renderCategChart();
   } catch {
     updateRowCateg(btn, oldCateg);
   }
@@ -1576,6 +1679,7 @@ async function execDeleteExpense(rowId, tr) {
     tr.remove();
     _currentExpenses = _currentExpenses.filter(ex => String(ex.id) !== String(rowId));
     renderSummaryCards();
+    renderCategChart();
     if (_currentExpenses.length === 0) {
       fechamentoContent.hidden = true;
       btnZerarMes.hidden = true;
