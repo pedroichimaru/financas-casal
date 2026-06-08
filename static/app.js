@@ -963,7 +963,11 @@ function renderCategChart() {
 
   const sorted = Object.entries(totals)
     .filter(([, v]) => v > 0)
-    .sort(([, a], [, b]) => b - a);
+    .sort(([catA, a], [catB, b]) => {
+      if (catA === "Falta classificar") return 1;
+      if (catB === "Falta classificar") return -1;
+      return b - a;
+    });
 
   if (sorted.length === 0) { card.hidden = true; return; }
   card.hidden = false;
