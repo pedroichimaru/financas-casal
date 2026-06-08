@@ -1026,9 +1026,9 @@ function renderCategChart() {
             callback: v => v === 0 ? "0" : `${v / 1000}k`,
             font: { ...font, size: 10 },
             color: "#94A3B8",
-            maxTicksLimit: 7,
+            stepSize: 1000,
           },
-          grid: { color: "rgba(0,0,0,0.05)" },
+          grid: { color: "rgba(0,0,0,0.07)" },
           border: { display: false },
         },
         y: {
