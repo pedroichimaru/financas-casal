@@ -1021,7 +1021,7 @@ function renderCategChart() {
       scales: {
         x: {
           min: 0,
-          max: 30000,
+          max: 15000,
           ticks: {
             callback: v => v === 0 ? "0" : `${v / 1000}k`,
             font: { ...font, size: 10 },
