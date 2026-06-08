@@ -452,6 +452,16 @@ async function handleFile(file) {
     return;
   }
 
+  // Verificar se mês já foi importado
+  try {
+    const mesesRes  = await fetch("/meses");
+    const mesesData = await mesesRes.json();
+    if (mesesData.includes(selectedMonth())) {
+      showError(`O mês ${selectedMonth()} já possui despesas importadas. Zere o mês no Fechamento antes de reimportar.`);
+      return;
+    }
+  } catch { /* segue sem bloquear se a verificação falhar */ }
+
   errorBanner.hidden = true;
   importSuccess.hidden = true;
   loading.hidden = false;
@@ -1386,7 +1396,8 @@ btnZerarMes.addEventListener("click", () => {
   showConfirmModal(
     "Zerar mês",
     `Apagar todas as ${count} despesa${count !== 1 ? "s" : ""} de ${mes}? Esta ação não pode ser desfeita.`,
-    () => execDeleteMes(mes)
+    () => execDeleteMes(mes),
+    "ZERAR MÊS"
   );
 });
 
@@ -1494,14 +1505,21 @@ async function saveSalEdit() {
 
 // ===== CONFIRM MODAL =====
 
-const confirmOverlay = document.getElementById("confirm-modal-overlay");
-const confirmTitle   = document.getElementById("confirm-modal-title");
-const confirmDesc    = document.getElementById("confirm-modal-desc");
-const confirmCancel  = document.getElementById("confirm-modal-cancel");
-const confirmOk      = document.getElementById("confirm-modal-ok");
+const confirmOverlay     = document.getElementById("confirm-modal-overlay");
+const confirmTitle       = document.getElementById("confirm-modal-title");
+const confirmDesc        = document.getElementById("confirm-modal-desc");
+const confirmCancel      = document.getElementById("confirm-modal-cancel");
+const confirmOk          = document.getElementById("confirm-modal-ok");
+const confirmPhraseWrap  = document.getElementById("confirm-phrase-wrap");
+const confirmPhraseLabel = document.getElementById("confirm-phrase-label");
+const confirmPhraseInput = document.getElementById("confirm-phrase-input");
 
 let _confirmCallback = null;
+let _confirmPhrase   = null;
 
+confirmPhraseInput.addEventListener("input", () => {
+  confirmOk.disabled = confirmPhraseInput.value !== _confirmPhrase;
+});
 confirmCancel.addEventListener("click", closeConfirmModal);
 confirmOk.addEventListener("click", () => {
   if (_confirmCallback) _confirmCallback();
@@ -1514,17 +1532,33 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && !confirmOverlay.hidden) closeConfirmModal();
 });
 
-function showConfirmModal(title, desc, onConfirm) {
+function showConfirmModal(title, desc, onConfirm, phrase = null) {
   confirmTitle.textContent = title;
   confirmDesc.textContent  = desc;
   _confirmCallback = onConfirm;
-  confirmOverlay.hidden = false;
-  confirmOk.focus();
+  _confirmPhrase   = phrase;
+  if (phrase) {
+    confirmPhraseLabel.textContent = phrase;
+    confirmPhraseInput.value = "";
+    confirmOk.disabled = true;
+    confirmPhraseWrap.hidden = false;
+    confirmOverlay.hidden = false;
+    confirmPhraseInput.focus();
+  } else {
+    confirmPhraseWrap.hidden = true;
+    confirmOk.disabled = false;
+    confirmOverlay.hidden = false;
+    confirmOk.focus();
+  }
 }
 
 function closeConfirmModal() {
   confirmOverlay.hidden = true;
   _confirmCallback = null;
+  _confirmPhrase   = null;
+  confirmPhraseInput.value = "";
+  confirmOk.disabled = false;
+  confirmPhraseWrap.hidden = true;
 }
 
 // ===== SALÁRIOS =====

@@ -938,6 +938,19 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
   justify-content: flex-end;
 }
 
+.confirm-phrase-hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 14px 0 6px;
+}
+.confirm-phrase-hint strong { color: var(--text); }
+.confirm-phrase-input {
+  width: 100%;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+
 .edit-pag-form {
   display: flex;
   flex-direction: column;

@@ -70,6 +70,8 @@ class ImportRequest(BaseModel):
 
 @app.post("/import")
 def import_expenses(body: ImportRequest):
+    if body.mes in get_meses():
+        raise HTTPException(status_code=409, detail=f"O mês {body.mes} já possui despesas importadas.")
     lookup = build_classification_lookup()
     classified = [
         {
