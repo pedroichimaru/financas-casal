@@ -559,11 +559,11 @@ let _apropDropdown   = null;
 const FILTER_COLS = {
   id: {
     thId: "th-id-filter-btn",
-    getValue: (tr) => tr.querySelectorAll("td")[3]?.textContent.trim() ?? "",
+    getValue: (tr) => tr.querySelectorAll("td")[3]?.dataset.abbrev ?? "",
   },
   portador: {
     thId: "th-portador-filter-btn",
-    getValue: (tr) => tr.querySelectorAll("td")[4]?.textContent.trim() ?? "",
+    getValue: (tr) => tr.querySelectorAll("td")[4]?.dataset.abbrev ?? "",
   },
   apropriacao: {
     thId: "th-aprop-filter-btn",
@@ -798,8 +798,8 @@ function renderFechamento({ expenses }) {
   });
 
   _currentExpenses = ordered.map(e => ({ ...e }));
-  _filterValues.id          = [...new Set(ordered.map(e => (e.id_origem || "").trim()))].sort();
-  _filterValues.portador    = [...new Set(ordered.map(e => (e.portador  || "").trim()))].sort();
+  _filterValues.id          = [...new Set(ordered.map(e => abbrevId((e.id_origem || "").trim())))].sort();
+  _filterValues.portador    = [...new Set(ordered.map(e => abbrevPortador((e.portador || "").trim())))].sort();
   _filterValues.apropriacao = ["Pedro", "Marina", "Casa", "50/50"].filter(v => ordered.some(e => e.apropriacao === v));
   _filterValues.categoria   = VALID_CATEGORIAS.filter(v => ordered.some(e => (e.categoria || "Falta classificar") === v));
   Object.keys(_filters).forEach(k => { _filters[k] = new Set(); });
@@ -822,8 +822,8 @@ function renderFechamento({ expenses }) {
       <td>${e.data}</td>
       <td>${e.despesa}</td>
       <td class="col-valor">${formatBRL(e.valor)}</td>
-      <td>${e.id_origem}</td>
-      <td>${e.portador}</td>
+      <td data-abbrev="${abbrevId(e.id_origem)}">${abbrevId(e.id_origem)}</td>
+      <td data-abbrev="${abbrevPortador(e.portador)}">${abbrevPortador(e.portador)}</td>
       <td><button class="aprop-btn" data-rowid="${e.id}" data-aprop="${e.apropriacao}"><span class="aprop-btn-label">${e.apropriacao}</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button></td>
       <td><button class="categ-btn categ-btn--${categClass(eCateg)}" data-rowid="${e.id}" data-categ="${eCateg}" title="${eCateg}"><span class="categ-btn-label">${eCateg}</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button></td>
       <td class="col-del"><button class="del-row-btn" title="Excluir despesa"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></td>
@@ -857,7 +857,7 @@ function renderIdTotals() {
     .forEach(([id, valor]) => {
       const item = document.createElement("div");
       item.className = "id-totals-item";
-      item.innerHTML = `<div class="id-totals-label" title="${id}">${id}</div><div class="id-totals-value">${formatBRL(valor)}</div>`;
+      item.innerHTML = `<div class="id-totals-label" title="${id}">${abbrevId(id)}</div><div class="id-totals-value">${formatBRL(valor)}</div>`;
       strip.appendChild(item);
     });
 
@@ -1239,7 +1239,12 @@ async function applyRecategory(btn, newCateg) {
     });
     if (!res.ok) { updateRowCateg(btn, oldCateg); return; }
     const exp = _currentExpenses.find(e => String(e.id) === String(rowId));
-    if (exp) exp.categoria = newCateg;
+    if (exp) {
+      exp.categoria = newCateg;
+      _filterValues.categoria = VALID_CATEGORIAS.filter(v =>
+        _currentExpenses.some(e => (e.categoria || "Falta classificar") === v)
+      );
+    }
     applyFilters();
   } catch {
     updateRowCateg(btn, oldCateg);
@@ -1923,6 +1928,39 @@ function formatPct(v) {
 }
 
 // ===== UTILS =====
+
+function _bankName(lower) {
+  if (lower.includes("santander"))                                   return "Santander";
+  if (lower.includes("itau") || lower.includes("itaú") ||
+      lower.includes("latam"))                                       return "Itaú";
+  if (lower.includes("bradesco"))                                    return "Bradesco";
+  if (lower.includes("nubank") || lower.includes("nu "))            return "Nubank";
+  if (lower.includes("inter"))                                       return "Inter";
+  if (lower.includes("c6"))                                         return "C6";
+  if (lower.includes("xp"))                                         return "XP";
+  if (lower.includes("btg"))                                        return "BTG";
+  if (lower.includes("caixa"))                                      return "Caixa";
+  if (lower.includes("banco do brasil") || /\bbb\b/.test(lower))   return "BB";
+  return null;
+}
+
+function abbrevId(id) {
+  const l     = (id || "").toLowerCase();
+  const isCC  = l.includes("extrato") || l.includes("conta corrente") || l.includes("cc");
+  const bank  = _bankName(l);
+  const brand = l.includes("visa") ? "VISA" : l.includes("master") ? "MASTER" : "";
+  if (isCC && bank)   return `Conta ${bank}`;
+  if (bank && brand)  return `${bank} ${brand}`;
+  if (bank)           return bank;
+  return id || "—";
+}
+
+function abbrevPortador(portador) {
+  const l = (portador || "").toLowerCase();
+  if (l.includes("pedro"))  return "Pedro";
+  if (l.includes("marina")) return "Marina";
+  return portador || "—";
+}
 
 // Returns [group, lowerName]: group 0 = conta corrente, 1 = credit card
 function idSortPair(id) {

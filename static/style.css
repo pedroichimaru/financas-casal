@@ -853,15 +853,15 @@ tfoot .row-meio   { background: var(--meio-bg);   color: var(--meio-text); }
   min-width: 0;
 }
 
-.categ-btn--casa          { color: #7C3AED; }
-.categ-btn--conteudo      { color: #0284C7; }
-.categ-btn--mercado       { color: #0F766E; }
-.categ-btn--restaurante   { color: #C2410C; }
-.categ-btn--saude         { color: #15803D; }
-.categ-btn--taxa          { color: #475569; }
-.categ-btn--transporte    { color: #B45309; }
-.categ-btn--viagem        { color: #BE185D; }
-.categ-btn--investimento  { color: #6D28D9; }
+.categ-btn--casa          { color: #3B82F6; }
+.categ-btn--conteudo      { color: #8B5CF6; }
+.categ-btn--mercado       { color: #22C55E; }
+.categ-btn--restaurante   { color: #F97316; }
+.categ-btn--saude         { color: #16A34A; }
+.categ-btn--taxa          { color: #64748B; }
+.categ-btn--transporte    { color: #14B8A6; }
+.categ-btn--viagem        { color: #EF4444; }
+.categ-btn--investimento  { color: #78716C; }
 .categ-btn--falta         { color: #94A3B8; border-style: dashed; }
 
 /* ===== CATEG DROPDOWN ===== */
@@ -902,15 +902,15 @@ tfoot .row-meio   { background: var(--meio-bg);   color: var(--meio-text); }
   flex-shrink: 0;
 }
 
-.categ-option-dot--casa          { background: #7C3AED; }
-.categ-option-dot--conteudo      { background: #0284C7; }
-.categ-option-dot--mercado       { background: #0F766E; }
-.categ-option-dot--restaurante   { background: #C2410C; }
-.categ-option-dot--saude         { background: #15803D; }
-.categ-option-dot--taxa          { background: #475569; }
-.categ-option-dot--transporte    { background: #B45309; }
-.categ-option-dot--viagem        { background: #BE185D; }
-.categ-option-dot--investimento  { background: #6D28D9; }
+.categ-option-dot--casa          { background: #3B82F6; }
+.categ-option-dot--conteudo      { background: #8B5CF6; }
+.categ-option-dot--mercado       { background: #22C55E; }
+.categ-option-dot--restaurante   { background: #F97316; }
+.categ-option-dot--saude         { background: #16A34A; }
+.categ-option-dot--taxa          { background: #64748B; }
+.categ-option-dot--transporte    { background: #14B8A6; }
+.categ-option-dot--viagem        { background: #EF4444; }
+.categ-option-dot--investimento  { background: #78716C; }
 .categ-option-dot--falta         { background: #94A3B8; }
 
 /* ===== DELETE ROW BUTTON ===== */
