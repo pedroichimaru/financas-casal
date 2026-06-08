@@ -979,7 +979,7 @@ function renderCategChart() {
   const colors = sorted.map(([cat]) => CATEG_COLORS[cat] || "#94A3B8");
 
   const wrap = canvas.closest(".categ-chart-wrap");
-  if (wrap) wrap.style.height = (sorted.length * 44 + 48) + "px";
+  if (wrap) wrap.style.height = (sorted.length * 34 + 28) + "px";
 
   const font = { family: "'IBM Plex Sans', sans-serif" };
 
@@ -1032,7 +1032,7 @@ function renderCategChart() {
           border: { display: false },
         },
         y: {
-          ticks: { font: { ...font, size: 12 }, color: "#0F172A" },
+          ticks: { font: { ...font, size: 11 }, color: "#0F172A" },
           grid: { display: false },
           border: { display: false },
         },
