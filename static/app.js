@@ -1144,8 +1144,17 @@ function openFilterPanel(colKey) {
   });
 
   document.body.appendChild(panel);
-  panel.style.top  = rect.bottom + "px";
-  panel.style.left = Math.max(0, rect.left) + "px";
+
+  // Position: open downward by default, flip upward if not enough space below
+  const panelH = panel.offsetHeight;
+  const panelW = panel.offsetWidth;
+  const spaceBelow = window.innerHeight - rect.bottom - 8;
+  const top = panelH <= spaceBelow
+    ? rect.bottom
+    : Math.max(8, rect.top - panelH);
+  const left = Math.min(Math.max(0, rect.left), window.innerWidth - panelW - 8);
+  panel.style.top  = top + "px";
+  panel.style.left = left + "px";
 
   panel.querySelector("#idf-all").addEventListener("click", () =>
     panel.querySelectorAll("input[type=checkbox]").forEach(cb => (cb.checked = true))
@@ -1161,15 +1170,19 @@ function openFilterPanel(colKey) {
     closeFilterPanel();
   });
 
-  _openFilterPanel = { key: colKey, panelEl: panel };
+  const scrollClose = () => closeFilterPanel();
+  window.addEventListener("scroll", scrollClose);
+  _openFilterPanel = { key: colKey, panelEl: panel, scrollClose };
   setTimeout(() => document.addEventListener("click", onOutsideFilter, true), 0);
 }
 
 function closeFilterPanel() {
   if (!_openFilterPanel) return;
-  _openFilterPanel.panelEl.remove();
+  const { panelEl, scrollClose } = _openFilterPanel;
+  panelEl.remove();
   _openFilterPanel = null;
   document.removeEventListener("click", onOutsideFilter, true);
+  if (scrollClose) window.removeEventListener("scroll", scrollClose);
 }
 
 function onOutsideFilter(e) {
