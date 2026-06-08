@@ -823,6 +823,96 @@ tfoot .row-meio   { background: var(--meio-bg);   color: var(--meio-text); }
 .aprop-option--casa   .aprop-option-dot { background: var(--casa-accent); }
 .aprop-option--meio   .aprop-option-dot { background: var(--meio-accent); }
 
+/* ===== CATEG BUTTON ===== */
+.categ-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px 2px 8px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1.5px solid currentColor;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s, transform 0.1s;
+  background: rgba(255,255,255,0.85);
+  white-space: nowrap;
+  max-width: 160px;
+}
+
+.categ-btn:hover { opacity: 0.75; }
+.categ-btn:active { transform: scale(0.95); }
+.categ-btn svg { flex-shrink: 0; opacity: 0.7; }
+
+.categ-btn-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.categ-btn--casa          { color: #3B82F6; }
+.categ-btn--conteudo      { color: #8B5CF6; }
+.categ-btn--mercado       { color: #22C55E; }
+.categ-btn--restaurante   { color: #F97316; }
+.categ-btn--saude         { color: #16A34A; }
+.categ-btn--taxa          { color: #64748B; }
+.categ-btn--transporte    { color: #14B8A6; }
+.categ-btn--viagem        { color: #EF4444; }
+.categ-btn--investimento  { color: #78716C; }
+.categ-btn--falta         { color: #94A3B8; border-style: dashed; }
+
+/* ===== CATEG DROPDOWN ===== */
+.categ-dropdown {
+  background: var(--surface);
+  border: 1px solid var(--border-mid);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  z-index: 200;
+  overflow: hidden;
+  min-width: 210px;
+}
+
+.categ-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text);
+  border: none;
+  background: none;
+  width: 100%;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.1s;
+}
+
+.categ-option:hover { background: var(--surface-2); }
+.categ-option--active { font-weight: 700; }
+
+.categ-option-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.categ-option-dot--casa          { background: #3B82F6; }
+.categ-option-dot--conteudo      { background: #8B5CF6; }
+.categ-option-dot--mercado       { background: #22C55E; }
+.categ-option-dot--restaurante   { background: #F97316; }
+.categ-option-dot--saude         { background: #16A34A; }
+.categ-option-dot--taxa          { background: #64748B; }
+.categ-option-dot--transporte    { background: #14B8A6; }
+.categ-option-dot--viagem        { background: #EF4444; }
+.categ-option-dot--investimento  { background: #78716C; }
+.categ-option-dot--falta         { background: #94A3B8; }
+
 /* ===== DELETE ROW BUTTON ===== */
 .col-del {
   width: 44px;
@@ -1521,6 +1611,11 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
   .result-header { flex-direction: column; align-items: flex-start; }
   .logo-icon { width: 32px; height: 32px; border-radius: 7px; }
 }
+
+/* ===== CATEGORY CHART ===== */
+.categ-chart-card { padding: 20px 24px 24px; margin-top: 20px; margin-bottom: 24px; }
+.categ-chart-label { margin-bottom: 14px; }
+.categ-chart-wrap  { position: relative; overflow: visible; }
 
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {

@@ -6,13 +6,14 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from categorizer import categorize as categorize_expense
 from classifier import classify
 from database import (
-    add_pagamento, build_classification_lookup, delete_expense, delete_mes,
-    delete_pagamento, delete_pagamentos_by_mes, delete_salario,
-    get_expenses_by_mes, get_meses, get_pagamentos, get_proporcao_for_mes,
-    get_salarios, init_db, save_expenses,
-    update_apropriacao, update_pagamento, upsert_salario,
+    add_pagamento, build_categoria_lookup, build_classification_lookup,
+    delete_expense, delete_mes, delete_pagamento, delete_pagamentos_by_mes,
+    delete_salario, get_expenses_by_mes, get_meses, get_pagamentos,
+    get_proporcao_for_mes, get_salarios, init_db, save_expenses,
+    update_apropriacao, update_categoria, update_pagamento, upsert_salario,
 )
 from parser import parse_xlsx
 
@@ -47,9 +48,11 @@ async def upload(file: UploadFile = File(...), mes: str = Form(...)):
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    lookup = build_classification_lookup()
+    lookup     = build_classification_lookup()
+    cat_lookup = build_categoria_lookup()
     for e in expenses:
         e["apropriacao"] = classify(e["despesa"], e["id"], e["portador"], lookup)
+        e["categoria"]   = categorize_expense(e["despesa"], e["id"], e["portador"], cat_lookup)
 
     total = round(sum(e["valor"] for e in expenses), 2)
     return {"expenses": expenses, "total": total, "count": len(expenses), "mes": mes}
@@ -72,15 +75,17 @@ class ImportRequest(BaseModel):
 def import_expenses(body: ImportRequest):
     if body.mes in get_meses():
         raise HTTPException(status_code=409, detail=f"O mês {body.mes} já possui despesas importadas.")
-    lookup = build_classification_lookup()
+    lookup     = build_classification_lookup()
+    cat_lookup = build_categoria_lookup()
     classified = [
         {
-            "data": e.data,
-            "despesa": e.despesa,
-            "valor": e.valor,
-            "id": e.id,
-            "portador": e.portador,
+            "data":        e.data,
+            "despesa":     e.despesa,
+            "valor":       e.valor,
+            "id":          e.id,
+            "portador":    e.portador,
             "apropriacao": classify(e.despesa, e.id, e.portador, lookup),
+            "categoria":   categorize_expense(e.despesa, e.id, e.portador, cat_lookup),
         }
         for e in body.expenses
     ]
@@ -91,6 +96,12 @@ def import_expenses(body: ImportRequest):
 # ---------- Reclassificar ----------
 
 VALID_APROPRIACOES = {"Pedro", "Marina", "Casa", "50/50"}
+
+VALID_CATEGORIAS = {
+    "Casa", "Conteúdo/Apps", "Mercado", "Restaurante/Delivery",
+    "Saúde/Corrida", "Taxa/Burocracia", "Transporte/Uber",
+    "Viagem/Presente", "Movimentação/Investimento", "Falta classificar",
+}
 
 
 class ApropriacaoUpdate(BaseModel):
@@ -103,6 +114,18 @@ def patch_apropriacao(expense_id: int, body: ApropriacaoUpdate):
         raise HTTPException(status_code=400, detail="Apropriação inválida")
     update_apropriacao(expense_id, body.apropriacao)
     return {"id": expense_id, "apropriacao": body.apropriacao}
+
+
+class CategoriaUpdate(BaseModel):
+    categoria: str
+
+
+@app.patch("/expenses/{expense_id}/categoria")
+def patch_categoria(expense_id: int, body: CategoriaUpdate):
+    if body.categoria not in VALID_CATEGORIAS:
+        raise HTTPException(status_code=400, detail="Categoria inválida")
+    update_categoria(expense_id, body.categoria)
+    return {"id": expense_id, "categoria": body.categoria}
 
 
 @app.delete("/expenses/{expense_id}")

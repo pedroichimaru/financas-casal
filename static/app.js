@@ -15,6 +15,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
     document.getElementById("section-salarios").hidden   = section !== "salarios";
     closeFilterPanel();
     closeApropDropdown();
+    closeCategDropdown();
     closeMesDropdown();
     if (section === "inicio")     initInicio();
     if (section === "fechamento") initFechamento();
@@ -558,20 +559,24 @@ let _apropDropdown   = null;
 const FILTER_COLS = {
   id: {
     thId: "th-id-filter-btn",
-    getValue: (tr) => tr.querySelectorAll("td")[3]?.textContent.trim() ?? "",
+    getValue: (tr) => tr.querySelectorAll("td")[3]?.dataset.abbrev ?? "",
   },
   portador: {
     thId: "th-portador-filter-btn",
-    getValue: (tr) => tr.querySelectorAll("td")[4]?.textContent.trim() ?? "",
+    getValue: (tr) => tr.querySelectorAll("td")[4]?.dataset.abbrev ?? "",
   },
   apropriacao: {
     thId: "th-aprop-filter-btn",
     getValue: (tr) => tr.querySelectorAll("td")[5]?.querySelector(".aprop-btn")?.dataset.aprop ?? "",
   },
+  categoria: {
+    thId: "th-categ-filter-btn",
+    getValue: (tr) => tr.querySelectorAll("td")[6]?.querySelector(".categ-btn")?.dataset.categ ?? "",
+  },
 };
 
-const _filters      = { id: new Set(), portador: new Set(), apropriacao: new Set() };
-const _filterValues = { id: [],        portador: [],        apropriacao: [] };
+const _filters      = { id: new Set(), portador: new Set(), apropriacao: new Set(), categoria: new Set() };
+const _filterValues = { id: [],        portador: [],        apropriacao: [],         categoria: [] };
 
 const SORT_COLS = [
   { key: "data",    thId: "th-sort-data" },
@@ -580,9 +585,39 @@ const SORT_COLS = [
   { key: "id",          thId: "th-sort-id" },
   { key: "portador",    thId: "th-sort-portador" },
   { key: "apropriacao", thId: "th-sort-aprop" },
+  { key: "categoria",   thId: "th-sort-categ" },
 ];
 
 let _sortState         = { col: null, dir: "asc" };
+
+const CATEG_COLORS = {
+  "Casa":                      "#3B82F6",
+  "Conteúdo/Apps":             "#8B5CF6",
+  "Mercado":                   "#22C55E",
+  "Restaurante/Delivery":      "#F97316",
+  "Saúde/Corrida":             "#16A34A",
+  "Taxa/Burocracia":           "#64748B",
+  "Transporte/Uber":           "#14B8A6",
+  "Viagem/Presente":           "#EF4444",
+  "Movimentação/Investimento": "#78716C",
+  "Falta classificar":         "#94A3B8",
+};
+
+const CATEG_CLASSES = {
+  "Casa":                      "casa",
+  "Conteúdo/Apps":             "conteudo",
+  "Mercado":                   "mercado",
+  "Restaurante/Delivery":      "restaurante",
+  "Saúde/Corrida":             "saude",
+  "Taxa/Burocracia":           "taxa",
+  "Transporte/Uber":           "transporte",
+  "Viagem/Presente":           "viagem",
+  "Movimentação/Investimento": "investimento",
+  "Falta classificar":         "falta",
+};
+const VALID_CATEGORIAS = Object.keys(CATEG_CLASSES);
+function categClass(categ) { return CATEG_CLASSES[categ] || "falta"; }
+
 let _currentProp       = null;
 let _currentPagamentos = [];
 let _totalMarina       = 0;
@@ -594,9 +629,12 @@ const PAG_SORT_COLS = [
 ];
 let _pagSortState  = { col: null, dir: "asc" };
 let _editingPagId  = null;
+let _categDropdown = null;
+let _categChart    = null;
 
 // Persistent delegated listeners (registered once)
 fechamentoBody.addEventListener("click", onApropBtnClick);
+fechamentoBody.addEventListener("click", onCategBtnClick);
 fechamentoBody.addEventListener("click", onDelRowBtnClick);
 Object.entries(FILTER_COLS).forEach(([colKey, cfg]) => {
   document.getElementById(cfg.thId).addEventListener("click", (e) => {
@@ -718,6 +756,7 @@ fechamentoSel.addEventListener("change", async () => {
   fechamentoEmpty.hidden = true;
   closeFilterPanel();
   closeApropDropdown();
+  closeCategDropdown();
   Object.keys(_filters).forEach(k => { _filters[k] = new Set(); });
   updateFilterIndicators();
   _currentProp = null;
@@ -773,9 +812,10 @@ function renderFechamento({ expenses }) {
   });
 
   _currentExpenses = ordered.map(e => ({ ...e }));
-  _filterValues.id          = [...new Set(ordered.map(e => (e.id_origem || "").trim()))].sort();
-  _filterValues.portador    = [...new Set(ordered.map(e => (e.portador  || "").trim()))].sort();
+  _filterValues.id          = [...new Set(ordered.map(e => abbrevId((e.id_origem || "").trim())))].sort();
+  _filterValues.portador    = [...new Set(ordered.map(e => abbrevPortador((e.portador || "").trim())))].sort();
   _filterValues.apropriacao = ["Pedro", "Marina", "Casa", "50/50"].filter(v => ordered.some(e => e.apropriacao === v));
+  _filterValues.categoria   = VALID_CATEGORIAS.filter(v => ordered.some(e => (e.categoria || "Falta classificar") === v));
   Object.keys(_filters).forEach(k => { _filters[k] = new Set(); });
   updateFilterIndicators();
   _sortState = { col: null, dir: "asc" };
@@ -791,13 +831,15 @@ function renderFechamento({ expenses }) {
     const tr = document.createElement("tr");
     tr.className = rowClass(e.apropriacao);
     tr.dataset.rowid = e.id;
+    const eCateg = e.categoria || "Falta classificar";
     tr.innerHTML = `
       <td>${e.data}</td>
       <td>${e.despesa}</td>
       <td class="col-valor">${formatBRL(e.valor)}</td>
-      <td>${e.id_origem}</td>
-      <td>${e.portador}</td>
+      <td data-abbrev="${abbrevId(e.id_origem)}">${abbrevId(e.id_origem)}</td>
+      <td data-abbrev="${abbrevPortador(e.portador)}">${abbrevPortador(e.portador)}</td>
       <td><button class="aprop-btn" data-rowid="${e.id}" data-aprop="${e.apropriacao}"><span class="aprop-btn-label">${e.apropriacao}</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button></td>
+      <td><button class="categ-btn categ-btn--${categClass(eCateg)}" data-rowid="${e.id}" data-categ="${eCateg}" title="${eCateg}"><span class="categ-btn-label">${eCateg}</span><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></button></td>
       <td class="col-del"><button class="del-row-btn" title="Excluir despesa"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></td>
     `;
     fechamentoBody.appendChild(tr);
@@ -805,6 +847,7 @@ function renderFechamento({ expenses }) {
 
   renderSummaryCards();
   renderIdTotals();
+  renderCategChart();
 }
 
 function renderIdTotals() {
@@ -829,7 +872,7 @@ function renderIdTotals() {
     .forEach(([id, valor]) => {
       const item = document.createElement("div");
       item.className = "id-totals-item";
-      item.innerHTML = `<div class="id-totals-label" title="${id}">${id}</div><div class="id-totals-value">${formatBRL(valor)}</div>`;
+      item.innerHTML = `<div class="id-totals-label" title="${id}">${abbrevId(id)}</div><div class="id-totals-value">${formatBRL(valor)}</div>`;
       strip.appendChild(item);
     });
 
@@ -907,6 +950,93 @@ function renderSummaryCards() {
   renderBalancoSaldo();
 }
 
+function renderCategChart() {
+  const canvas = document.getElementById("categ-chart");
+  const card   = document.getElementById("categ-chart-card");
+  if (!canvas || typeof Chart === "undefined") return;
+
+  const totals = {};
+  _currentExpenses.forEach(e => {
+    const cat = e.categoria || "Falta classificar";
+    totals[cat] = (totals[cat] || 0) + e.valor;
+  });
+
+  const sorted = Object.entries(totals)
+    .filter(([, v]) => v > 0)
+    .sort(([, a], [, b]) => b - a);
+
+  if (sorted.length === 0) { card.hidden = true; return; }
+  card.hidden = false;
+
+  if (_categChart) { _categChart.destroy(); _categChart = null; }
+
+  const labels = sorted.map(([cat]) => cat);
+  const values = sorted.map(([, v]) => v);
+  const colors = sorted.map(([cat]) => CATEG_COLORS[cat] || "#94A3B8");
+
+  const wrap = canvas.closest(".categ-chart-wrap");
+  if (wrap) wrap.style.height = (sorted.length * 44 + 48) + "px";
+
+  const font = { family: "'IBM Plex Sans', sans-serif" };
+
+  _categChart = new Chart(canvas, {
+    type: "bar",
+    plugins: [ChartDataLabels],
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: colors.map(c => c + "BF"),
+        borderColor: colors,
+        borderWidth: 0,
+        borderRadius: 4,
+        clip: false,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 250 },
+      layout: { padding: { right: 90 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false },
+        datalabels: {
+          anchor: "end",
+          align: "end",
+          clamp: true,
+          formatter: v => {
+            const k = v / 1000;
+            return `R$ ${k.toFixed(k >= 10 ? 0 : 1).replace(".", ",")}k`;
+          },
+          font: { ...font, size: 11, weight: "600" },
+          color: "#475569",
+        },
+      },
+      scales: {
+        x: {
+          min: 0,
+          max: 30000,
+          ticks: {
+            callback: v => v === 0 ? "0" : `${v / 1000}k`,
+            font: { ...font, size: 10 },
+            color: "#94A3B8",
+            maxTicksLimit: 7,
+          },
+          grid: { color: "rgba(0,0,0,0.05)" },
+          border: { display: false },
+        },
+        y: {
+          ticks: { font: { ...font, size: 12 }, color: "#0F172A" },
+          grid: { display: false },
+          border: { display: false },
+        },
+      },
+    },
+  });
+}
+
 function buildSplitHtml({ items, note }) {
   const pills = items.map(({ cls, label, val }) =>
     `<span class="split-pill split-pill--${cls}"><span class="split-pill__dot"></span><span class="split-pill__label">${label}</span><span class="split-pill__val">${formatBRL(val)}</span></span>`
@@ -945,6 +1075,7 @@ function getSortValue(tr, colKey) {
     case "id":          return exp.id_origem  ?? "";
     case "portador":    return exp.portador   ?? "";
     case "apropriacao": return exp.apropriacao ?? "";
+    case "categoria":   return exp.categoria   ?? "Falta classificar";
     default:            return "";
   }
 }
@@ -1073,6 +1204,7 @@ function onApropBtnClick(e) {
     return;
   }
   closeApropDropdown();
+  closeCategDropdown();
   openApropDropdown(btn);
 }
 
@@ -1128,6 +1260,105 @@ function onOutsideAprop(e) {
   if (_apropDropdown && !_apropDropdown.contains(e.target) && !e.target.closest(".aprop-btn")) {
     closeApropDropdown();
   }
+}
+
+// ===== CATEG RECLASSIFY =====
+
+function onCategBtnClick(e) {
+  const btn = e.target.closest(".categ-btn");
+  if (!btn) return;
+  e.stopPropagation();
+  if (_categDropdown && _categDropdown.dataset.rowid === btn.dataset.rowid) {
+    closeCategDropdown();
+    return;
+  }
+  closeCategDropdown();
+  closeApropDropdown();
+  openCategDropdown(btn);
+}
+
+function openCategDropdown(btn) {
+  const rect        = btn.getBoundingClientRect();
+  const currentCateg = btn.dataset.categ;
+
+  const dropdown = document.createElement("div");
+  dropdown.className    = "categ-dropdown";
+  dropdown.dataset.rowid = btn.dataset.rowid;
+  dropdown.style.position = "fixed";
+
+  VALID_CATEGORIAS.forEach(cat => {
+    const opt = document.createElement("button");
+    opt.className = `categ-option${cat === currentCateg ? " categ-option--active" : ""}`;
+    const dot = document.createElement("span");
+    dot.className = `categ-option-dot categ-option-dot--${categClass(cat)}`;
+    opt.appendChild(dot);
+    opt.appendChild(document.createTextNode(cat));
+    opt.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      applyRecategory(btn, cat);
+      closeCategDropdown();
+    });
+    dropdown.appendChild(opt);
+  });
+
+  document.body.appendChild(dropdown);
+
+  const dropH = VALID_CATEGORIAS.length * 34 + 10;
+  let top = rect.bottom + 4;
+  if (top + dropH > window.innerHeight) top = rect.top - dropH - 4;
+  dropdown.style.top  = top + "px";
+  dropdown.style.left = rect.left + "px";
+
+  _categDropdown = dropdown;
+  setTimeout(() => document.addEventListener("click", onOutsideCateg, true), 0);
+}
+
+function closeCategDropdown() {
+  if (!_categDropdown) return;
+  _categDropdown.remove();
+  _categDropdown = null;
+  document.removeEventListener("click", onOutsideCateg, true);
+}
+
+function onOutsideCateg(e) {
+  if (_categDropdown && !_categDropdown.contains(e.target) && !e.target.closest(".categ-btn")) {
+    closeCategDropdown();
+  }
+}
+
+async function applyRecategory(btn, newCateg) {
+  const rowId = btn.dataset.rowid;
+  const oldCateg = btn.dataset.categ;
+  if (oldCateg === newCateg) return;
+
+  updateRowCateg(btn, newCateg);
+
+  try {
+    const res = await fetch(`/expenses/${rowId}/categoria`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categoria: newCateg }),
+    });
+    if (!res.ok) { updateRowCateg(btn, oldCateg); return; }
+    const exp = _currentExpenses.find(e => String(e.id) === String(rowId));
+    if (exp) {
+      exp.categoria = newCateg;
+      _filterValues.categoria = VALID_CATEGORIAS.filter(v =>
+        _currentExpenses.some(e => (e.categoria || "Falta classificar") === v)
+      );
+    }
+    applyFilters();
+    renderCategChart();
+  } catch {
+    updateRowCateg(btn, oldCateg);
+  }
+}
+
+function updateRowCateg(btn, categ) {
+  btn.dataset.categ = categ;
+  btn.title = categ;
+  btn.className = `categ-btn categ-btn--${categClass(categ)}`;
+  btn.querySelector(".categ-btn-label").textContent = categ;
 }
 
 async function applyReclassify(btn, newAprop) {
@@ -1448,6 +1679,7 @@ async function execDeleteExpense(rowId, tr) {
     tr.remove();
     _currentExpenses = _currentExpenses.filter(ex => String(ex.id) !== String(rowId));
     renderSummaryCards();
+    renderCategChart();
     if (_currentExpenses.length === 0) {
       fechamentoContent.hidden = true;
       btnZerarMes.hidden = true;
@@ -1800,6 +2032,39 @@ function formatPct(v) {
 }
 
 // ===== UTILS =====
+
+function _bankName(lower) {
+  if (lower.includes("santander"))                                   return "Santander";
+  if (lower.includes("itau") || lower.includes("itaú") ||
+      lower.includes("latam"))                                       return "Itaú";
+  if (lower.includes("bradesco"))                                    return "Bradesco";
+  if (lower.includes("nubank") || lower.includes("nu "))            return "Nubank";
+  if (lower.includes("inter"))                                       return "Inter";
+  if (lower.includes("c6"))                                         return "C6";
+  if (lower.includes("xp"))                                         return "XP";
+  if (lower.includes("btg"))                                        return "BTG";
+  if (lower.includes("caixa"))                                      return "Caixa";
+  if (lower.includes("banco do brasil") || /\bbb\b/.test(lower))   return "BB";
+  return null;
+}
+
+function abbrevId(id) {
+  const l     = (id || "").toLowerCase();
+  const isCC  = l.includes("extrato") || l.includes("conta corrente") || l.includes("cc");
+  const bank  = _bankName(l);
+  const brand = l.includes("visa") ? "VISA" : l.includes("master") ? "MASTER" : "";
+  if (isCC && bank)   return `Conta ${bank}`;
+  if (bank && brand)  return `${bank} ${brand}`;
+  if (bank)           return bank;
+  return id || "—";
+}
+
+function abbrevPortador(portador) {
+  const l = (portador || "").toLowerCase();
+  if (l.includes("pedro"))  return "Pedro";
+  if (l.includes("marina")) return "Marina";
+  return portador || "—";
+}
 
 // Returns [group, lowerName]: group 0 = conta corrente, 1 = credit card
 function idSortPair(id) {
