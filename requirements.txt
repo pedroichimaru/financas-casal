@@ -2,3 +2,6 @@ fastapi
 uvicorn[standard]
 openpyxl
 python-multipart
+bcrypt
+PyJWT
+slowapi

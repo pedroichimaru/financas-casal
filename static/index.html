@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css?v=36" />
+  <link rel="stylesheet" href="/static/style.css?v=37" />
 </head>
 <body>
 
@@ -31,8 +31,67 @@
         <button class="nav-btn" data-section="fechamento">Fechamento</button>
         <button class="nav-btn" data-section="salarios">Salários</button>
       </nav>
+      <div class="nav-user" id="nav-user" hidden>
+        <span id="nav-user-email"></span>
+        <button id="btn-change-password" class="nav-user-btn">Alterar senha</button>
+        <button id="btn-logout" class="nav-user-btn nav-user-btn--danger">Sair</button>
+      </div>
     </div>
   </header>
+
+  <!-- Auth Overlay -->
+  <div id="auth-overlay" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="1" x2="12" y2="23"></line>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="auth-title">Finanças Casal</div>
+          <div class="auth-subtitle">Gestão financeira mensal</div>
+        </div>
+      </div>
+
+      <!-- Login panel -->
+      <div id="auth-login-panel">
+        <h2 class="auth-form-title">Entrar</h2>
+        <div class="auth-form-group">
+          <label class="auth-label" for="login-email">E-mail</label>
+          <input type="email" id="login-email" class="input-text auth-input" placeholder="seu@email.com" autocomplete="email" />
+        </div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="login-password">Senha</label>
+          <input type="password" id="login-password" class="input-text auth-input" placeholder="••••••" autocomplete="current-password" />
+        </div>
+        <div id="login-error" class="error-banner" hidden></div>
+        <button id="btn-login" class="btn-primary auth-btn">Entrar</button>
+        <p class="auth-switch">Não tem conta? <a href="#" id="link-to-register">Criar conta</a></p>
+      </div>
+
+      <!-- Register panel -->
+      <div id="auth-register-panel" hidden>
+        <h2 class="auth-form-title">Criar conta</h2>
+        <div class="auth-form-group">
+          <label class="auth-label" for="reg-email">E-mail</label>
+          <input type="email" id="reg-email" class="input-text auth-input" placeholder="seu@email.com" autocomplete="email" />
+        </div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="reg-password">Senha</label>
+          <input type="password" id="reg-password" class="input-text auth-input" placeholder="mínimo 6 caracteres" autocomplete="new-password" />
+        </div>
+        <div class="auth-form-group">
+          <label class="auth-label" for="reg-password2">Confirmar senha</label>
+          <input type="password" id="reg-password2" class="input-text auth-input" placeholder="••••••" autocomplete="new-password" />
+        </div>
+        <div id="reg-error" class="error-banner" hidden></div>
+        <button id="btn-register" class="btn-primary auth-btn">Criar conta</button>
+        <p class="auth-switch">Já tem conta? <a href="#" id="link-to-login">Entrar</a></p>
+      </div>
+    </div>
+  </div>
 
   <main>
 
@@ -464,8 +523,35 @@
     </div>
   </div>
 
+  <!-- Change Password Modal -->
+  <div id="change-pwd-overlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <h3>Alterar senha</h3>
+      <div class="edit-pag-form">
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="cp-current">Senha atual</label>
+          <input type="password" id="cp-current" class="input-text edit-pag-input" placeholder="••••••" />
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="cp-new">Nova senha</label>
+          <input type="password" id="cp-new" class="input-text edit-pag-input" placeholder="mínimo 6 caracteres" />
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="cp-new2">Confirmar nova senha</label>
+          <input type="password" id="cp-new2" class="input-text edit-pag-input" placeholder="••••••" />
+        </div>
+      </div>
+      <div id="cp-error" class="error-banner" hidden></div>
+      <div id="cp-success" class="success-banner" hidden></div>
+      <div class="modal-actions">
+        <button id="cp-cancel" class="btn-secondary">Cancelar</button>
+        <button id="cp-save" class="btn-primary">Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <script src="/static/app.js?v=36"></script>
+  <script src="/static/app.js?v=37"></script>
 </body>
 </html>

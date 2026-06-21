@@ -1,3 +1,167 @@
+// ===== AUTH =====
+
+function getToken()   { return localStorage.getItem("auth_token"); }
+function setToken(t)  { localStorage.setItem("auth_token", t); }
+function clearToken() { localStorage.removeItem("auth_token"); }
+
+async function authFetch(url, opts = {}) {
+  const token = getToken();
+  const headers = { ...(opts.headers || {}) };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (!(opts.body instanceof FormData) && opts.body && typeof opts.body === "string") {
+    headers["Content-Type"] = "application/json";
+  }
+  const res = await fetch(url, { ...opts, headers });
+  if (res.status === 401) {
+    clearToken();
+    showAuthOverlay();
+    throw new Error("Não autenticado");
+  }
+  return res;
+}
+
+function showAuthOverlay() {
+  document.getElementById("auth-overlay").hidden = false;
+  document.getElementById("auth-login-panel").hidden   = false;
+  document.getElementById("auth-register-panel").hidden = true;
+  document.getElementById("login-error").hidden  = true;
+  document.getElementById("reg-error").hidden    = true;
+}
+
+function hideAuthOverlay() {
+  document.getElementById("auth-overlay").hidden = true;
+}
+
+function setNavUser(email) {
+  document.getElementById("nav-user-email").textContent = email;
+  document.getElementById("nav-user").hidden = false;
+}
+
+// Login
+document.getElementById("btn-login").addEventListener("click", async () => {
+  const email    = document.getElementById("login-email").value.trim();
+  const password = document.getElementById("login-password").value;
+  const errEl    = document.getElementById("login-error");
+  errEl.hidden   = true;
+  try {
+    const res  = await fetch("/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.detail || "Erro ao entrar"; errEl.hidden = false; return; }
+    setToken(data.access_token);
+    hideAuthOverlay();
+    setNavUser(email);
+    initInicio();
+  } catch {
+    errEl.textContent = "Erro de conexão"; errEl.hidden = false;
+  }
+});
+
+document.getElementById("login-password").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("btn-login").click();
+});
+
+// Register
+document.getElementById("btn-register").addEventListener("click", async () => {
+  const email    = document.getElementById("reg-email").value.trim();
+  const password = document.getElementById("reg-password").value;
+  const password2 = document.getElementById("reg-password2").value;
+  const errEl    = document.getElementById("reg-error");
+  errEl.hidden   = true;
+  if (password !== password2) { errEl.textContent = "As senhas não coincidem"; errEl.hidden = false; return; }
+  try {
+    const res  = await fetch("/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.detail || "Erro ao criar conta"; errEl.hidden = false; return; }
+    setToken(data.access_token);
+    hideAuthOverlay();
+    setNavUser(email);
+    initInicio();
+  } catch {
+    errEl.textContent = "Erro de conexão"; errEl.hidden = false;
+  }
+});
+
+// Panel switchers
+document.getElementById("link-to-register").addEventListener("click", e => {
+  e.preventDefault();
+  document.getElementById("auth-login-panel").hidden    = true;
+  document.getElementById("auth-register-panel").hidden = false;
+});
+document.getElementById("link-to-login").addEventListener("click", e => {
+  e.preventDefault();
+  document.getElementById("auth-register-panel").hidden = true;
+  document.getElementById("auth-login-panel").hidden    = false;
+});
+
+// Logout
+document.getElementById("btn-logout").addEventListener("click", () => {
+  clearToken();
+  location.reload();
+});
+
+// Change password
+document.getElementById("btn-change-password").addEventListener("click", () => {
+  document.getElementById("cp-current").value  = "";
+  document.getElementById("cp-new").value      = "";
+  document.getElementById("cp-new2").value     = "";
+  document.getElementById("cp-error").hidden   = true;
+  document.getElementById("cp-success").hidden = true;
+  document.getElementById("change-pwd-overlay").hidden = false;
+});
+document.getElementById("cp-cancel").addEventListener("click", () => {
+  document.getElementById("change-pwd-overlay").hidden = true;
+});
+document.getElementById("cp-save").addEventListener("click", async () => {
+  const current  = document.getElementById("cp-current").value;
+  const newPwd   = document.getElementById("cp-new").value;
+  const newPwd2  = document.getElementById("cp-new2").value;
+  const errEl    = document.getElementById("cp-error");
+  const sucEl    = document.getElementById("cp-success");
+  errEl.hidden   = true;
+  sucEl.hidden   = true;
+  if (newPwd !== newPwd2) { errEl.textContent = "As senhas não coincidem"; errEl.hidden = false; return; }
+  try {
+    const res  = await authFetch("/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ current_password: current, new_password: newPwd }),
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.detail || "Erro ao alterar senha"; errEl.hidden = false; return; }
+    sucEl.textContent = "Senha alterada com sucesso!";
+    sucEl.hidden = false;
+    setTimeout(() => { document.getElementById("change-pwd-overlay").hidden = true; }, 1500);
+  } catch (err) {
+    if (err.message !== "Não autenticado") { errEl.textContent = "Erro de conexão"; errEl.hidden = false; }
+  }
+});
+
+// Boot: check token
+(async function boot() {
+  const token = getToken();
+  if (!token) { showAuthOverlay(); return; }
+  try {
+    const res = await fetch("/auth/me", {
+      headers: { "Authorization": `Bearer ${token}` },
+    });
+    if (!res.ok) { clearToken(); showAuthOverlay(); return; }
+    const data = await res.json();
+    hideAuthOverlay();
+    setNavUser(data.email);
+    initInicio();
+  } catch {
+    showAuthOverlay();
+  }
+})();
+
 // ===== NAVIGATION =====
 
 document.querySelector(".logo").addEventListener("click", () => {
@@ -57,7 +221,7 @@ async function loadDashboard() {
   contentEl.hidden = true;
   emptyEl.hidden   = true;
   try {
-    const res  = await fetch("/dashboard");
+    const res  = await authFetch("/dashboard");
     const data = await res.json();
     loadingEl.hidden = true;
     if (!data.has_data) { emptyEl.hidden = false; return; }
@@ -359,9 +523,6 @@ function renderHistoricoChart(historico) {
   });
 }
 
-// Carrega dashboard ao iniciar (seção padrão)
-initInicio();
-
 // ===== IMPORTAR =====
 
 const dropZone      = document.getElementById("drop-zone");
@@ -455,7 +616,7 @@ async function handleFile(file) {
 
   // Verificar se mês já foi importado
   try {
-    const mesesRes  = await fetch("/meses");
+    const mesesRes  = await authFetch("/meses");
     const mesesData = await mesesRes.json();
     if (mesesData.includes(selectedMonth())) {
       showError(`O mês ${selectedMonth()} já possui despesas importadas. Zere o mês no Fechamento antes de reimportar.`);
@@ -474,7 +635,7 @@ async function handleFile(file) {
   formData.append("mes", selectedMonth());
 
   try {
-    const res = await fetch("/upload", { method: "POST", body: formData });
+    const res = await authFetch("/upload", { method: "POST", body: formData });
     const data = await res.json();
     if (!res.ok) { showError(data.detail || "Erro ao processar o arquivo."); return; }
 
@@ -494,7 +655,7 @@ async function saveImport() {
   btnImport.textContent = "Salvando…";
 
   try {
-    const res = await fetch("/import", {
+    const res = await authFetch("/import", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mes: _pendingMes, expenses: _pendingExpenses }),
@@ -691,7 +852,7 @@ async function initFechamento() {
   _mesesLoaded = true;
 
   try {
-    const res = await fetch("/meses");
+    const res = await authFetch("/meses");
     _meses = await res.json();
     fechamentoSel.innerHTML = '<option value="">Selecione o mês…</option>';
     _meses.forEach((m) => {
@@ -775,9 +936,9 @@ fechamentoSel.addEventListener("change", async () => {
   fechamentoLoading.hidden = false;
   try {
     const [expRes, propRes, pagRes] = await Promise.all([
-      fetch(`/fechamento?mes=${encodeURIComponent(mes)}`),
-      fetch(`/salarios/proporcao?mes=${encodeURIComponent(mes)}`),
-      fetch(`/pagamentos?mes=${encodeURIComponent(mes)}`),
+     authFetch(`/fechamento?mes=${encodeURIComponent(mes)}`),
+     authFetch(`/salarios/proporcao?mes=${encodeURIComponent(mes)}`),
+     authFetch(`/pagamentos?mes=${encodeURIComponent(mes)}`),
     ]);
     const data = await expRes.json();
     _currentProp       = propRes.ok ? await propRes.json() : null;
@@ -1382,7 +1543,7 @@ async function applyRecategory(btn, newCateg) {
   updateRowCateg(btn, newCateg);
 
   try {
-    const res = await fetch(`/expenses/${rowId}/categoria`, {
+    const res = await authFetch(`/expenses/${rowId}/categoria`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ categoria: newCateg }),
@@ -1420,7 +1581,7 @@ async function applyReclassify(btn, newAprop) {
   updateRowAprop(tr, btn, newAprop);
 
   try {
-    const res = await fetch(`/expenses/${rowId}/apropriacao`, {
+    const res = await authFetch(`/expenses/${rowId}/apropriacao`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ apropriacao: newAprop }),
@@ -1534,7 +1695,7 @@ async function addPagamento() {
   const btn = document.getElementById("btn-add-pag");
   btn.disabled = true;
   try {
-    const res = await fetch("/pagamentos", {
+    const res = await authFetch("/pagamentos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mes, data, pagamento: desc, valor, apropriacao: aprop }),
@@ -1596,7 +1757,7 @@ async function saveEditPagamento() {
   const btn = document.getElementById("edit-pag-save");
   btn.disabled = true;
   try {
-    const res = await fetch(`/pagamentos/${_editingPagId}`, {
+    const res = await authFetch(`/pagamentos/${_editingPagId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ data, pagamento: desc, valor, apropriacao: aprop }),
@@ -1627,7 +1788,7 @@ function onPagDelBtnClick(e) {
 
 async function execDeletePagamento(pagId, tr) {
   try {
-    const res = await fetch(`/pagamentos/${pagId}`, { method: "DELETE" });
+    const res = await authFetch(`/pagamentos/${pagId}`, { method: "DELETE" });
     if (!res.ok) return;
     tr.remove();
     _currentPagamentos = _currentPagamentos.filter(p => String(p.id) !== String(pagId));
@@ -1683,8 +1844,8 @@ btnZerarMes.addEventListener("click", () => {
 async function execDeleteMes(mes) {
   try {
     const [res] = await Promise.all([
-      fetch(`/despesas?mes=${encodeURIComponent(mes)}`,   { method: "DELETE" }),
-      fetch(`/pagamentos?mes=${encodeURIComponent(mes)}`, { method: "DELETE" }),
+     authFetch(`/despesas?mes=${encodeURIComponent(mes)}`,   { method: "DELETE" }),
+     authFetch(`/pagamentos?mes=${encodeURIComponent(mes)}`, { method: "DELETE" }),
     ]);
     if (!res.ok) return;
     fechamentoContent.hidden = true;
@@ -1722,7 +1883,7 @@ function onDelRowBtnClick(e) {
 
 async function execDeleteExpense(rowId, tr) {
   try {
-    const res = await fetch(`/expenses/${rowId}`, { method: "DELETE" });
+    const res = await authFetch(`/expenses/${rowId}`, { method: "DELETE" });
     if (!res.ok) return;
     tr.remove();
     _currentExpenses = _currentExpenses.filter(ex => String(ex.id) !== String(rowId));
@@ -1770,7 +1931,7 @@ async function saveSalEdit() {
   const btn = document.getElementById("edit-sal-save");
   btn.disabled = true;
   try {
-    const res = await fetch("/salarios", {
+    const res = await authFetch("/salarios", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mes, pedro, marina }),
@@ -1881,7 +2042,7 @@ async function loadSalarios() {
   salEmpty.hidden   = true;
   salSummaryEl.hidden = true;
   try {
-    const res  = await fetch("/salarios");
+    const res  = await authFetch("/salarios");
     const data = await res.json();
     salLoading.hidden = true;
     if (!data.length) {
@@ -1933,7 +2094,7 @@ async function saveSalario() {
   btnSalvar.disabled    = true;
   btnSalvar.textContent = "Salvando…";
   try {
-    const res = await fetch("/salarios", {
+    const res = await authFetch("/salarios", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mes, pedro, marina }),
@@ -2048,7 +2209,7 @@ function fillSalForm(mes, pedro, marina) {
 
 async function execDeleteSalario(mes) {
   try {
-    const res = await fetch(`/salarios?mes=${encodeURIComponent(mes)}`, { method: "DELETE" });
+    const res = await authFetch(`/salarios?mes=${encodeURIComponent(mes)}`, { method: "DELETE" });
     if (!res.ok) return;
     if (_salEditingMes === mes) clearSalForm();
     _salariosLoaded = false;

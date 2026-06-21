@@ -1641,6 +1641,127 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 .categ-view-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 .categ-chart-wrap  { position: relative; overflow: visible; }
 
+/* ===== AUTH OVERLAY ===== */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 24px;
+}
+
+.auth-card {
+  background: var(--surface);
+  border-radius: var(--r-lg);
+  padding: 36px 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.auth-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.auth-subtitle {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  margin-top: 1px;
+}
+
+.auth-form-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+
+.auth-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+
+.auth-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.auth-input { width: 100%; }
+
+.auth-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  font-size: 0.9375rem;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.auth-switch a {
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.auth-switch a:hover { text-decoration: underline; }
+
+/* ===== NAV USER ===== */
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#nav-user-email {
+  font-size: 0.8125rem;
+  color: #94A3B8;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-user-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #CBD5E1;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.nav-user-btn:hover { background: rgba(255,255,255,0.12); color: #F1F5F9; }
+
+.nav-user-btn--danger { color: #FDA4AF; }
+.nav-user-btn--danger:hover { background: rgba(220,38,38,0.2); color: #FCA5A5; }
+
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

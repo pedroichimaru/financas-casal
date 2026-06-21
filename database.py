@@ -2,6 +2,8 @@ import os
 import sqlite3
 from pathlib import Path
 
+from classifier import normalize_despesa
+
 DB_PATH = Path(os.environ.get("DB_PATH", str(Path(__file__).parent / "financas.db")))
 
 _MONTH_NUM = {
@@ -11,12 +13,14 @@ _MONTH_NUM = {
 }
 
 
-def _mes_sort_key(mes: str) -> str:
+def mes_sort_key(mes: str) -> str:
     parts = mes.lower().split("/")
     if len(parts) == 2:
         num = _MONTH_NUM.get(parts[0].strip(), "00")
         return f"{parts[1].strip()}-{num}"
     return mes
+
+_mes_sort_key = mes_sort_key  # compat alias
 
 
 def get_conn() -> sqlite3.Connection:
@@ -69,6 +73,14 @@ def init_db():
                 marina    REAL NOT NULL DEFAULT 0
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                email         TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                created_at    TEXT DEFAULT (datetime('now','localtime'))
+            )
+        """)
         conn.commit()
 
 
@@ -108,7 +120,7 @@ def build_classification_lookup() -> dict:
     lookup: dict = {}
     for row in rows:
         key = (
-            (row["despesa"]   or "").strip().lower(),
+            normalize_despesa(row["despesa"]).lower(),
             (row["id_origem"] or "").strip().lower(),
             (row["portador"]  or "").strip().lower(),
         )
@@ -138,7 +150,7 @@ def build_categoria_lookup() -> dict:
     lookup: dict = {}
     for row in rows:
         key = (
-            (row["despesa"]   or "").strip().lower(),
+            normalize_despesa(row["despesa"]).lower(),
             (row["id_origem"] or "").strip().lower(),
             (row["portador"]  or "").strip().lower(),
         )
@@ -247,6 +259,62 @@ def delete_pagamentos_by_mes(mes: str):
         conn.commit()
 
 
+
+
+# ---------- Users ----------
+
+def create_user(email: str, password_hash: str):
+    with get_conn() as conn:
+        conn.execute(
+            "INSERT INTO users (email, password_hash) VALUES (?, ?)",
+            (email, password_hash),
+        )
+        conn.commit()
+
+
+def get_user_by_email(email: str) -> dict | None:
+    with get_conn() as conn:
+        row = conn.execute(
+            "SELECT id, email, password_hash FROM users WHERE email = ?", (email,)
+        ).fetchone()
+        return dict(row) if row else None
+
+
+def update_user_password(email: str, new_hash: str):
+    with get_conn() as conn:
+        conn.execute(
+            "UPDATE users SET password_hash = ? WHERE email = ?",
+            (new_hash, email),
+        )
+        conn.commit()
+
+
+def get_historico_totais() -> dict[str, dict[str, float]]:
+    """Single aggregated query: {mes: {apropriacao: total}} for all months."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            """SELECT mes, COALESCE(apropriacao, '50/50') AS aprop, SUM(valor) AS total
+               FROM despesas
+               GROUP BY mes, aprop"""
+        ).fetchall()
+    result: dict[str, dict[str, float]] = {}
+    for row in rows:
+        mes = row["mes"]
+        if mes not in result:
+            result[mes] = {"Pedro": 0.0, "Marina": 0.0, "Casa": 0.0, "50/50": 0.0}
+        aprop = row["aprop"]
+        if aprop in result[mes]:
+            result[mes][aprop] += row["total"]
+    return result
+
+
+def get_salarios_com_ordem() -> list[dict]:
+    """Like get_salarios() but includes mes_ordem for proportion calculations."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT mes, mes_ordem, pedro, marina FROM salarios ORDER BY mes_ordem ASC"
+        ).fetchall()
+        return [dict(r) for r in rows]
 
 
 def get_proporcao_for_mes(mes: str) -> dict:

@@ -1,5 +1,13 @@
 import re
 
+# Remove trailing installment suffix, e.g. "10/12" or "3/6", for lookup matching
+_PARCEL_RE = re.compile(r"\s+\d{1,2}/\d{1,2}\s*$")
+
+
+def normalize_despesa(despesa: str) -> str:
+    return _PARCEL_RE.sub("", (despesa or "")).strip()
+
+
 # Despesas que viram Casa mesmo em cartão individual Itaú Latam
 _CASA_PATTERNS = [
     r"i\s*food|ifd\b",                                       # iFood
@@ -27,7 +35,7 @@ def classify(despesa: str, id_origem: str, portador: str, lookup: dict | None = 
     # 1. Lookup histórico: mesma combinação (despesa, id, portador) com ≥75% de frequência
     if lookup is not None:
         key = (
-            (despesa   or "").strip().lower(),
+            normalize_despesa(despesa).lower(),
             (id_origem or "").strip().lower(),
             (portador  or "").strip().lower(),
         )
