@@ -1,0 +1,21 @@
+services:
+  # O nome do servico eh como o Caddy encontra o app (reverse_proxy financas:8000).
+  financas:
+    build: .
+    image: financas-casal:latest
+    container_name: financas
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      # Bind mount (e nao volume nomeado) para o backup no host ser trivial.
+      # O dono precisa ser o uid do app: chown -R 1000:1000 ./data
+      - ./data:/data
+    # Nada publicado no host: quem fala com a internet eh so o Caddy, em /srv/edge.
+    expose:
+      - "8000"
+    networks:
+      - financas
+
+networks:
+  financas:
+    external: true

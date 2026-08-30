@@ -5,6 +5,10 @@ __pycache__/
 .venv/
 venv/
 *.xlsx
+*.csv
 !exemplo.xlsx
 *.db
 .claude/
+data/
+backups/
+*.db.gz

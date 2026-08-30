@@ -1,0 +1,38 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configura SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HETZNER_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "${{ secrets.HETZNER_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Deploy
+        run: |
+          ssh -i ~/.ssh/id_deploy \
+              -o IdentitiesOnly=yes \
+              -p "${{ secrets.HETZNER_PORT || 22 }}" \
+              "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" \
+              'bash -lc "/srv/financas/scripts/deploy.sh"'
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 10); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://financas-casal.pdic.dev/ || true)
+            if [ "$code" = "200" ]; then echo "app no ar (200)"; exit 0; fi
+            echo "tentativa $i: HTTP $code"; sleep 6
+          done
+          echo "app nao respondeu 200 apos o deploy"; exit 1
