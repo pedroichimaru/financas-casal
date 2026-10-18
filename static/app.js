@@ -109,6 +109,7 @@ document.getElementById("btn-logout").addEventListener("click", () => {
 
 // Change password
 document.getElementById("btn-change-password").addEventListener("click", () => {
+  closeNavMenu();
   document.getElementById("cp-current").value  = "";
   document.getElementById("cp-new").value      = "";
   document.getElementById("cp-new2").value     = "";
@@ -181,10 +182,37 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
     closeApropDropdown();
     closeCategDropdown();
     closeMesDropdown();
+    closeNavMenu();
+    document.getElementById("nav-current").textContent = btn.textContent;
     if (section === "inicio")     initInicio();
     if (section === "fechamento") initFechamento();
     if (section === "salarios")  initSalarios();
   });
+});
+
+// Burger menu
+function openNavMenu() {
+  document.getElementById("nav-panel").hidden = false;
+  document.getElementById("nav-burger").setAttribute("aria-expanded", "true");
+}
+
+function closeNavMenu() {
+  document.getElementById("nav-panel").hidden = true;
+  document.getElementById("nav-burger").setAttribute("aria-expanded", "false");
+}
+
+document.getElementById("nav-burger").addEventListener("click", (e) => {
+  e.stopPropagation();
+  if (document.getElementById("nav-panel").hidden) openNavMenu();
+  else closeNavMenu();
+});
+
+document.addEventListener("click", (e) => {
+  if (!document.getElementById("nav-menu").contains(e.target)) closeNavMenu();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeNavMenu();
 });
 
 // ===== INÍCIO (DASHBOARD) =====

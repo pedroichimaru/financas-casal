@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css?v=37" />
+  <link rel="stylesheet" href="/static/style.css?v=38" />
 </head>
 <body>
 
@@ -25,16 +25,28 @@
           <p class="subtitle">Gestão financeira mensal</p>
         </div>
       </div>
-      <nav>
-        <button class="nav-btn active" data-section="inicio">Início</button>
-        <button class="nav-btn" data-section="importar">Importar</button>
-        <button class="nav-btn" data-section="fechamento">Fechamento</button>
-        <button class="nav-btn" data-section="salarios">Salários</button>
-      </nav>
-      <div class="nav-user" id="nav-user" hidden>
-        <span id="nav-user-email"></span>
-        <button id="btn-change-password" class="nav-user-btn">Alterar senha</button>
-        <button id="btn-logout" class="nav-user-btn nav-user-btn--danger">Sair</button>
+      <div class="nav-menu" id="nav-menu">
+        <button class="nav-burger" id="nav-burger" aria-label="Abrir menu" aria-expanded="false" aria-controls="nav-panel">
+          <span class="nav-burger-label" id="nav-current">Início</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="7" x2="20" y2="7"></line>
+            <line x1="4" y1="12" x2="20" y2="12"></line>
+            <line x1="4" y1="17" x2="20" y2="17"></line>
+          </svg>
+        </button>
+        <div class="nav-panel" id="nav-panel" hidden>
+          <nav>
+            <button class="nav-btn active" data-section="inicio">Início</button>
+            <button class="nav-btn" data-section="importar">Importar</button>
+            <button class="nav-btn" data-section="fechamento">Fechamento</button>
+            <button class="nav-btn" data-section="salarios">Salários</button>
+          </nav>
+          <div class="nav-user" id="nav-user" hidden>
+            <span id="nav-user-email"></span>
+            <button id="btn-change-password" class="nav-user-btn">Alterar senha</button>
+            <button id="btn-logout" class="nav-user-btn nav-user-btn--danger">Sair</button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -552,6 +564,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <script src="/static/app.js?v=37"></script>
+  <script src="/static/app.js?v=38"></script>
 </body>
 </html>
