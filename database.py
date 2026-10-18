@@ -81,6 +81,18 @@ def init_db():
                 created_at    TEXT DEFAULT (datetime('now','localtime'))
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS studio_despesas (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                categoria      TEXT NOT NULL,
+                credor         TEXT NOT NULL,
+                item           TEXT NOT NULL,
+                valor          REAL NOT NULL,
+                data_pagamento TEXT NOT NULL,
+                pagador        TEXT NOT NULL,
+                criado_em      TEXT DEFAULT (datetime('now','localtime'))
+            )
+        """)
         conn.commit()
 
 
@@ -256,6 +268,49 @@ def delete_pagamento(pag_id: int):
 def delete_pagamentos_by_mes(mes: str):
     with get_conn() as conn:
         conn.execute("DELETE FROM pagamentos WHERE mes = ?", (mes,))
+        conn.commit()
+
+
+# ---------- Studio Virginia ----------
+
+_STUDIO_COLS = "id, categoria, credor, item, valor, data_pagamento, pagador"
+
+
+def get_studio_despesas() -> list[dict]:
+    with get_conn() as conn:
+        rows = conn.execute(f"SELECT {_STUDIO_COLS} FROM studio_despesas ORDER BY id").fetchall()
+        return [dict(r) for r in rows]
+
+
+def add_studio_despesa(categoria: str, credor: str, item: str, valor: float,
+                       data_pagamento: str, pagador: str) -> dict:
+    with get_conn() as conn:
+        cur = conn.execute(
+            """INSERT INTO studio_despesas (categoria, credor, item, valor, data_pagamento, pagador)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (categoria, credor, item, valor, data_pagamento, pagador),
+        )
+        conn.commit()
+        return {"id": cur.lastrowid, "categoria": categoria, "credor": credor, "item": item,
+                "valor": valor, "data_pagamento": data_pagamento, "pagador": pagador}
+
+
+def update_studio_despesa(despesa_id: int, categoria: str, credor: str, item: str, valor: float,
+                          data_pagamento: str, pagador: str) -> bool:
+    with get_conn() as conn:
+        cur = conn.execute(
+            """UPDATE studio_despesas
+               SET categoria=?, credor=?, item=?, valor=?, data_pagamento=?, pagador=?
+               WHERE id=?""",
+            (categoria, credor, item, valor, data_pagamento, pagador, despesa_id),
+        )
+        conn.commit()
+        return cur.rowcount > 0
+
+
+def delete_studio_despesa(despesa_id: int):
+    with get_conn() as conn:
+        conn.execute("DELETE FROM studio_despesas WHERE id = ?", (despesa_id,))
         conn.commit()
 
 

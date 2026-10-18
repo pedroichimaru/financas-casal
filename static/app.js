@@ -178,6 +178,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
     document.getElementById("section-importar").hidden   = section !== "importar";
     document.getElementById("section-fechamento").hidden = section !== "fechamento";
     document.getElementById("section-salarios").hidden   = section !== "salarios";
+    document.getElementById("section-studio").hidden     = section !== "studio";
     closeFilterPanel();
     closeApropDropdown();
     closeCategDropdown();
@@ -187,6 +188,7 @@ document.querySelectorAll(".nav-btn").forEach((btn) => {
     if (section === "inicio")     initInicio();
     if (section === "fechamento") initFechamento();
     if (section === "salarios")  initSalarios();
+    if (section === "studio")    initStudio();
   });
 });
 
@@ -2313,3 +2315,207 @@ function idSortPair(id) {
 function formatBRL(value) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 }
+
+// ===== STUDIO VIRGINIA =====
+
+let _studioDespesas = [];
+let _studioEditingId = null; // null = modal em modo "adicionar"
+
+const STUDIO_EDIT_ICON = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>`;
+const STUDIO_DEL_ICON  = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+async function initStudio() {
+  const loading = document.getElementById("studio-loading");
+  const errEl   = document.getElementById("studio-error");
+  loading.hidden = false;
+  errEl.hidden   = true;
+  try {
+    const res = await authFetch("/studio/despesas");
+    if (!res.ok) throw new Error();
+    _studioDespesas = await res.json();
+    renderStudio();
+  } catch {
+    errEl.textContent = "Erro ao carregar as despesas do studio.";
+    errEl.hidden = false;
+  } finally {
+    loading.hidden = true;
+  }
+}
+
+function renderStudio() {
+  renderStudioSummary();
+  renderStudioTable();
+}
+
+// Aportes: o que cada um pagou sozinho + metade das despesas 50/50.
+// Participação no studio é 50/50, então cada um deveria ter aportado metade do total.
+function computeStudioTotais() {
+  let total = 0, pedro = 0, marina = 0;
+  _studioDespesas.forEach(d => {
+    total += d.valor;
+    if (d.pagador === "Pedro")       pedro  += d.valor;
+    else if (d.pagador === "Marina") marina += d.valor;
+    else { pedro += d.valor / 2; marina += d.valor / 2; }
+  });
+  // > 0: Marina deve a Pedro; < 0: Pedro deve a Marina
+  const balanco = (pedro - marina) / 2;
+  return { total, pedro, marina, balanco };
+}
+
+function renderStudioSummary() {
+  const { total, pedro, marina, balanco } = computeStudioTotais();
+  let balancoSub;
+  if (Math.abs(balanco) < 0.01) balancoSub = "Aportes equilibrados";
+  else if (balanco > 0)         balancoSub = "Marina deve a Pedro";
+  else                          balancoSub = "Pedro deve a Marina";
+
+  document.getElementById("studio-summary").innerHTML = `
+    <div class="summary-card summary-card--total">
+      <div class="summary-card__label">Investimento Total</div>
+      <div class="summary-card__value">${formatBRL(total)}</div>
+    </div>
+    <div class="summary-card summary-card--marina">
+      <div class="summary-card__label">Aportes Marina</div>
+      <div class="summary-card__value">${formatBRL(marina)}</div>
+    </div>
+    <div class="summary-card summary-card--pedro">
+      <div class="summary-card__label">Aportes Pedro</div>
+      <div class="summary-card__value">${formatBRL(pedro)}</div>
+    </div>
+    <div class="summary-card summary-card--meio">
+      <div class="summary-card__label">Balanço</div>
+      <div class="summary-card__value">${formatBRL(Math.abs(balanco))}</div>
+      <div class="summary-card__sub">${balancoSub}</div>
+    </div>
+  `;
+}
+
+function renderStudioTable() {
+  const tbody = document.getElementById("studio-body");
+  const empty = _studioDespesas.length === 0;
+  document.getElementById("studio-empty").hidden      = !empty;
+  document.getElementById("studio-table-wrap").hidden = empty;
+  tbody.innerHTML = "";
+
+  const ordered = [..._studioDespesas].sort((a, b) =>
+    parseDateSort(a.data_pagamento).localeCompare(parseDateSort(b.data_pagamento)) || a.id - b.id);
+
+  ordered.forEach(d => {
+    const tr = document.createElement("tr");
+    tr.className = rowClass(d.pagador);
+    tr.dataset.studioid = d.id;
+    tr.innerHTML = `
+      <td>${escapeHtml(d.categoria)}</td>
+      <td>${escapeHtml(d.credor)}</td>
+      <td>${escapeHtml(d.item)}</td>
+      <td class="col-valor">${formatBRL(d.valor)}</td>
+      <td>${escapeHtml(d.data_pagamento)}</td>
+      <td>${escapeHtml(d.pagador)}</td>
+      <td class="col-del"><button class="edit-row-btn" title="Editar">${STUDIO_EDIT_ICON}</button><button class="del-row-btn" title="Excluir despesa">${STUDIO_DEL_ICON}</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function openStudioModal(despesa = null) {
+  _studioEditingId = despesa ? String(despesa.id) : null;
+  document.getElementById("studio-modal-title").textContent = despesa ? "Editar despesa" : "Adicionar despesa";
+  document.getElementById("studio-modal-save").textContent  = despesa ? "Salvar alteração" : "Adicionar";
+  document.getElementById("studio-categoria").value = despesa?.categoria      ?? "Aquisição";
+  document.getElementById("studio-credor").value    = despesa?.credor         ?? "";
+  document.getElementById("studio-item").value      = despesa?.item           ?? "";
+  document.getElementById("studio-valor").value     = despesa?.valor          ?? "";
+  document.getElementById("studio-data").value      = despesa?.data_pagamento ?? "";
+  document.getElementById("studio-pagador").value   = despesa?.pagador        ?? "50/50";
+  document.getElementById("studio-modal-error").hidden = true;
+  document.getElementById("studio-modal-overlay").hidden = false;
+  document.getElementById("studio-credor").focus();
+}
+
+function closeStudioModal() {
+  _studioEditingId = null;
+  document.getElementById("studio-modal-overlay").hidden = true;
+}
+
+async function saveStudioDespesa() {
+  const body = {
+    categoria:      document.getElementById("studio-categoria").value,
+    credor:         document.getElementById("studio-credor").value.trim(),
+    item:           document.getElementById("studio-item").value.trim(),
+    valor:          parseFloat(document.getElementById("studio-valor").value),
+    data_pagamento: document.getElementById("studio-data").value.trim(),
+    pagador:        document.getElementById("studio-pagador").value,
+  };
+  const errEl = document.getElementById("studio-modal-error");
+  const fail  = (msg) => { errEl.textContent = msg; errEl.hidden = false; };
+  errEl.hidden = true;
+
+  if (!body.credor) return fail("Informe o credor.");
+  if (!body.item)   return fail("Informe o item.");
+  if (isNaN(body.valor) || body.valor === 0) return fail("Informe um valor válido.");
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(body.data_pagamento))
+    return fail("Informe a data completa no formato DD/MM/AAAA.");
+
+  const editingId = _studioEditingId;
+  const btn = document.getElementById("studio-modal-save");
+  btn.disabled = true;
+  try {
+    const res = await authFetch(editingId ? `/studio/despesas/${editingId}` : "/studio/despesas", {
+      method:  editingId ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const detail = (await res.json().catch(() => ({}))).detail;
+      return fail(typeof detail === "string" ? detail : "Erro ao salvar.");
+    }
+    const saved = await res.json();
+    if (editingId) {
+      const idx = _studioDespesas.findIndex(d => String(d.id) === editingId);
+      if (idx !== -1) _studioDespesas[idx] = saved;
+    } else {
+      _studioDespesas.push(saved);
+    }
+    closeStudioModal();
+    renderStudio();
+  } catch { fail("Erro de conexão."); }
+  finally  { btn.disabled = false; }
+}
+
+async function execDeleteStudioDespesa(id) {
+  try {
+    const res = await authFetch(`/studio/despesas/${id}`, { method: "DELETE" });
+    if (!res.ok) return;
+    _studioDespesas = _studioDespesas.filter(d => String(d.id) !== String(id));
+    renderStudio();
+  } catch { /* silent */ }
+}
+
+document.getElementById("btn-studio-add").addEventListener("click", () => openStudioModal());
+document.getElementById("studio-modal-save").addEventListener("click", saveStudioDespesa);
+document.getElementById("studio-modal-cancel").addEventListener("click", closeStudioModal);
+document.getElementById("studio-modal-overlay").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("studio-modal-overlay")) closeStudioModal();
+});
+document.getElementById("studio-data").addEventListener("input", function () { maskDate(this); });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !document.getElementById("studio-modal-overlay").hidden) closeStudioModal();
+});
+
+document.getElementById("studio-body").addEventListener("click", (e) => {
+  const tr = e.target.closest("tr");
+  const despesa = _studioDespesas.find(d => String(d.id) === tr?.dataset.studioid);
+  if (!despesa) return;
+  if (e.target.closest(".edit-row-btn")) openStudioModal(despesa);
+  if (e.target.closest(".del-row-btn")) {
+    showConfirmModal(
+      "Excluir despesa",
+      `Excluir "${despesa.item}" — ${formatBRL(despesa.valor)}?`,
+      () => execDeleteStudioDespesa(despesa.id)
+    );
+  }
+});

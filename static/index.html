@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/static/style.css?v=38" />
+  <link rel="stylesheet" href="/static/style.css?v=39" />
 </head>
 <body>
 
@@ -40,6 +40,7 @@
             <button class="nav-btn" data-section="importar">Importar</button>
             <button class="nav-btn" data-section="fechamento">Fechamento</button>
             <button class="nav-btn" data-section="salarios">Salários</button>
+            <button class="nav-btn" data-section="studio">Studio Virginia</button>
           </nav>
           <div class="nav-user" id="nav-user" hidden>
             <span id="nav-user-email"></span>
@@ -445,6 +446,43 @@
 
     </section>
 
+    <!-- ===== STUDIO VIRGINIA ===== -->
+    <section id="section-studio" hidden>
+
+      <div class="section-header">
+        <h2>Studio Virginia</h2>
+        <p>Investimentos na compra, reforma e gestão do studio no Edifício Virginia</p>
+      </div>
+
+      <div id="studio-summary" class="summary-cards"></div>
+
+      <div class="studio-toolbar">
+        <button id="btn-studio-add" class="btn-primary">+ Adicionar despesa</button>
+      </div>
+
+      <div id="studio-loading" class="loading" hidden>Carregando…</div>
+      <div id="studio-error" class="error-banner" hidden></div>
+      <div id="studio-empty" class="empty-state" hidden>Nenhuma despesa registrada ainda.</div>
+
+      <div id="studio-table-wrap" class="table-wrapper" hidden>
+        <table id="studio-table">
+          <thead>
+            <tr>
+              <th>Categoria</th>
+              <th>Credor</th>
+              <th>Item</th>
+              <th class="col-valor">Valor</th>
+              <th>Data de Pagamento</th>
+              <th>Pagador</th>
+              <th class="col-del"></th>
+            </tr>
+          </thead>
+          <tbody id="studio-body"></tbody>
+        </table>
+      </div>
+
+    </section>
+
   </main>
 
   <!-- Edit Salary Modal -->
@@ -471,6 +509,55 @@
       <div class="modal-actions">
         <button id="edit-sal-cancel" class="btn-secondary">Cancelar</button>
         <button id="edit-sal-save" class="btn-primary">Salvar alteração</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Studio Despesa Modal (add + edit) -->
+  <div id="studio-modal-overlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <h3 id="studio-modal-title">Adicionar despesa</h3>
+      <div class="edit-pag-form">
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="studio-categoria">Categoria</label>
+          <select id="studio-categoria" class="edit-pag-input">
+            <option value="Aquisição">Aquisição</option>
+            <option value="Reforma">Reforma</option>
+            <option value="Carrego">Carrego</option>
+          </select>
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="studio-credor">Credor</label>
+          <input type="text" id="studio-credor" class="input-text edit-pag-input" placeholder="Quem recebeu o pagamento">
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="studio-item">Item</label>
+          <input type="text" id="studio-item" class="input-text edit-pag-input" placeholder="O que foi pago">
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="studio-valor">Valor</label>
+          <div class="input-currency-wrap edit-pag-input">
+            <span class="input-currency-prefix">R$</span>
+            <input type="number" id="studio-valor" class="input-number" style="flex:1" placeholder="0,00" step="0.01">
+          </div>
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="studio-data">Data de Pagamento</label>
+          <input type="text" id="studio-data" class="input-text edit-pag-input" placeholder="DD/MM/AAAA" inputmode="numeric">
+        </div>
+        <div class="sal-form-group">
+          <label class="sal-form-label" for="studio-pagador">Pagador</label>
+          <select id="studio-pagador" class="edit-pag-input">
+            <option value="50/50">50/50</option>
+            <option value="Marina">Marina</option>
+            <option value="Pedro">Pedro</option>
+          </select>
+        </div>
+      </div>
+      <div id="studio-modal-error" class="error-banner" hidden></div>
+      <div class="modal-actions">
+        <button id="studio-modal-cancel" class="btn-secondary">Cancelar</button>
+        <button id="studio-modal-save" class="btn-primary">Salvar</button>
       </div>
     </div>
   </div>
@@ -564,6 +651,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <script src="/static/app.js?v=38"></script>
+  <script src="/static/app.js?v=39"></script>
 </body>
 </html>

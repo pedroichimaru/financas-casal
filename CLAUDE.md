@@ -44,8 +44,9 @@ render.yaml    Legacy Render config — kept only as a rollback path
 | `pagamentos` | Pedro's payments to Marina (registered manually per month) |
 | `salarios` | Pedro + Marina monthly salaries (used for proportional Casa split) |
 | `users` | Login accounts (email + bcrypt hash). Only 2 e-mails are allowed to register. |
+| `studio_despesas` | Studio Virginia investments: categoria, credor, item, valor, data_pagamento, pagador |
 
-All tables use a `mes_ordem` TEXT column (`YYYY-MM`) for correct chronological sorting.
+All monthly tables use a `mes_ordem` TEXT column (`YYYY-MM`) for correct chronological sorting.
 
 ### API endpoints
 
@@ -74,6 +75,10 @@ All tables use a `mes_ordem` TEXT column (`YYYY-MM`) for correct chronological s
 | PATCH | `/pagamentos/{id}` | Edit a payment |
 | DELETE | `/pagamentos/{id}` | Delete a payment |
 | DELETE | `/pagamentos?mes=...` | Delete all payments for a month (called alongside DELETE /despesas on Zerar Mês) |
+| GET | `/studio/despesas` | List Studio Virginia expenses |
+| POST | `/studio/despesas` | Add a Studio expense |
+| PATCH | `/studio/despesas/{id}` | Edit a Studio expense |
+| DELETE | `/studio/despesas/{id}` | Delete a Studio expense |
 
 ### Data flow
 
@@ -163,6 +168,15 @@ and rows whose category is later corrected by hand — it never rewrites stored 
 - Form to add/edit monthly Pedro + Marina salaries (upsert).
 - Table showing each month's raw salaries, rolling 12-month averages, and resulting % split.
 - Summary cards at top showing the current rolling average split.
+
+**Studio Virginia**
+- Tracks investments in the studio Pedro and Marina own together (ownership is 50/50).
+- Cards: Investimento Total, Aportes Marina, Aportes Pedro, Balanço. A `50/50` expense counts
+  half toward each person's aportes; Balanço = (Aportes Pedro − Aportes Marina) / 2, i.e. what
+  the one who contributed less owes the other.
+- Table: Categoria (Aquisição / Reforma / Carrego), Credor, Item, Valor, Data de Pagamento,
+  Pagador (50/50 / Marina / Pedro). One modal handles both add and edit; row hover reveals
+  edit/delete buttons.
 
 ### Confirm modal
 

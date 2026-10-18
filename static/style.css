@@ -993,7 +993,8 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
 .edit-row-btn:active { transform: scale(0.95); }
 
 #pagamentos-table .col-del,
-#salarios-table   .col-del { width: 72px; white-space: nowrap; }
+#salarios-table   .col-del,
+#studio-table     .col-del { width: 72px; white-space: nowrap; }
 #edit-sal-error { margin-bottom: 16px; }
 #pag-body tr.pag-row-editing { box-shadow: inset 0 0 0 2px var(--blue); }
 
@@ -1803,4 +1804,11 @@ tbody tr:hover .edit-row-btn { opacity: 1; }
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ===== STUDIO VIRGINIA ===== */
+.studio-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
 }

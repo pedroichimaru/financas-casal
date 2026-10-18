@@ -18,13 +18,13 @@ from slowapi.middleware import SlowAPIMiddleware
 from categorizer import categorize as categorize_expense
 from classifier import classify
 from database import (
-    add_pagamento, build_categoria_lookup, build_classification_lookup,
+    add_pagamento, add_studio_despesa, build_categoria_lookup, build_classification_lookup,
     create_user, delete_expense, delete_mes, delete_pagamento,
-    delete_pagamentos_by_mes, delete_salario, get_expenses_by_mes,
+    delete_pagamentos_by_mes, delete_salario, delete_studio_despesa, get_expenses_by_mes,
     get_historico_totais, get_meses, get_pagamentos, get_proporcao_for_mes,
-    get_salarios, get_salarios_com_ordem, get_user_by_email, init_db,
+    get_salarios, get_salarios_com_ordem, get_studio_despesas, get_user_by_email, init_db,
     mes_sort_key, save_expenses, update_apropriacao, update_categoria,
-    update_pagamento, update_user_password, upsert_salario,
+    update_pagamento, update_studio_despesa, update_user_password, upsert_salario,
 )
 from parser import parse_xlsx
 
@@ -326,6 +326,65 @@ def remove_pagamento(pag_id: int, _: str = Depends(get_current_user)):
 def remove_pagamentos_mes(mes: str, _: str = Depends(get_current_user)):
     delete_pagamentos_by_mes(mes)
     return {"deleted_mes": mes}
+
+
+# ---------- Studio Virginia ----------
+
+VALID_STUDIO_CATEGORIAS = {"Aquisição", "Reforma", "Carrego"}
+VALID_STUDIO_PAGADORES  = {"50/50", "Marina", "Pedro"}
+
+
+class StudioDespesaIn(BaseModel):
+    categoria: str
+    credor: str
+    item: str
+    valor: float
+    data_pagamento: str
+    pagador: str
+
+
+def _validate_studio(body: StudioDespesaIn):
+    if body.categoria not in VALID_STUDIO_CATEGORIAS:
+        raise HTTPException(status_code=400, detail="Categoria inválida")
+    if body.pagador not in VALID_STUDIO_PAGADORES:
+        raise HTTPException(status_code=400, detail="Pagador inválido")
+    if not body.credor.strip() or not body.item.strip():
+        raise HTTPException(status_code=400, detail="Credor e item são obrigatórios")
+    if body.valor == 0:
+        raise HTTPException(status_code=400, detail="Valor não pode ser zero")
+    try:
+        datetime.strptime(body.data_pagamento, "%d/%m/%Y")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Data deve estar no formato DD/MM/AAAA")
+
+
+@app.get("/studio/despesas")
+def list_studio_despesas(_: str = Depends(get_current_user)):
+    return get_studio_despesas()
+
+
+@app.post("/studio/despesas")
+def create_studio_despesa(body: StudioDespesaIn, _: str = Depends(get_current_user)):
+    _validate_studio(body)
+    return add_studio_despesa(body.categoria, body.credor.strip(), body.item.strip(),
+                              body.valor, body.data_pagamento, body.pagador)
+
+
+@app.patch("/studio/despesas/{despesa_id}")
+def edit_studio_despesa(despesa_id: int, body: StudioDespesaIn, _: str = Depends(get_current_user)):
+    _validate_studio(body)
+    found = update_studio_despesa(despesa_id, body.categoria, body.credor.strip(), body.item.strip(),
+                                  body.valor, body.data_pagamento, body.pagador)
+    if not found:
+        raise HTTPException(status_code=404, detail="Despesa não encontrada")
+    return {"id": despesa_id, **body.model_dump(),
+            "credor": body.credor.strip(), "item": body.item.strip()}
+
+
+@app.delete("/studio/despesas/{despesa_id}")
+def remove_studio_despesa(despesa_id: int, _: str = Depends(get_current_user)):
+    delete_studio_despesa(despesa_id)
+    return {"deleted": despesa_id}
 
 
 # ---------- Dashboard ----------
